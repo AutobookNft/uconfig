@@ -35,16 +35,14 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
     {
         $this->publishes([
             __DIR__.'/../config/uconfig.php' => config_path('uconfig.php'),
-        ], 'uconfig-config');
+        ], 'config');
 
         // Pubblica la migration
-        if ($this->app->runningInConsole()) {
-            if (!class_exists('CreateUconfigTable')) {
-                $this->publishes([
-                    __DIR__.'/../database/migrations/create_uconfig_table.php.stub' => database_path('migrations/' . date('Y_m_d_His') . '_create_uconfig_table.php'),
-                ], 'uconfig-migrations');
-            }
-        }
+    if ($this->app->runningInConsole()) {
+        $this->publishes([
+            __DIR__.'/../database/migrations/create_uconfig_table.php.stub' => database_path('migrations/' . date('Y_m_d_His') . '_create_uconfig_table.php'),
+        ], 'migrations');
+    }
     }
 
     /**
