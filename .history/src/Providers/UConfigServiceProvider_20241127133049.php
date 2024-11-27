@@ -34,7 +34,7 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
     public function boot()
     {
         $this->publishes([
-            __DIR__.'/../config/uconfig.php' => config_path('uconfig.php'),
+            __DIR__.'/..config/uconfig.php' => config_path('uconfig.php'),
         ], 'config');
     }
 
