@@ -41,9 +41,9 @@ class UConfig
 
     private function loadFromFile(string $filePath): void
     {
-        if (!file_exists($filePath) || !is_readable($filePath)) {
-            $this->logger->error("File di configurazione non trovato o non leggibile: $filePath");
-            throw new \RuntimeException("Impossibile caricare il file di configurazione: $filePath");
+        if (!file_exists($filePath)) {
+            $this->logger->error("File di configurazione non trovato: $filePath");
+            return;
         }
 
         $this->config = require $filePath;
