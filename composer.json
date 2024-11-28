@@ -41,11 +41,6 @@
     },
     "config": {
         "sort-packages": true
-    },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/AutobookNft/uconfig"
-        }
-    ]
+    }
+    
 }
