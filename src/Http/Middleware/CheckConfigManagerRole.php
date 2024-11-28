@@ -1,5 +1,6 @@
 <?php
-namespace UltraProject\UConfig\Middleware;
+
+namespace UltraProject\UConfig\Http\Middleware;
 
 use Closure;
 use Illuminate\Support\Facades\Auth;
