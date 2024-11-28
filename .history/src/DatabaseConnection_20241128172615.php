@@ -13,7 +13,7 @@ class DatabaseConnection
     {
         $host = $envLoader->get('DB_HOST');
         $dbname = $envLoader->get('DB_DATABASE');
-        $user = $envLoader->get('DB_USERNAME');
+        $user = $envLoader->get('DB_USER');
         $password = $envLoader->get('DB_PASSWORD');
 
         $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4";

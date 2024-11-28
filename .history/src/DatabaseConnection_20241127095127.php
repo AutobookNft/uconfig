@@ -12,8 +12,8 @@ class DatabaseConnection
     private function __construct(EnvLoader $envLoader)
     {
         $host = $envLoader->get('DB_HOST');
-        $dbname = $envLoader->get('DB_DATABASE');
-        $user = $envLoader->get('DB_USERNAME');
+        $dbname = $envLoader->get('DB_NAME');
+        $user = $envLoader->get('DB_USER');
         $password = $envLoader->get('DB_PASSWORD');
 
         $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4";
