@@ -41,7 +41,15 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
         // Pubblica le migrazioni
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../../database/migrations' => $this->app->databasePath('migrations'),
+                __DIR__.'/../../database/migrations/create_uconfig_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_table.php'),
+            ], 'uconfig-migrations');
+
+            $this->publishes([
+                __DIR__.'/../../database/migrations/create_uconfig_versions_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_versions_table.php'),
+            ], 'uconfig-migrations');
+
+            $this->publishes([
+                __DIR__.'/../../database/migrations/create_uconfig_audit_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_audit_table.php'),
             ], 'uconfig-migrations');
         }
 
@@ -60,7 +68,7 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
         $this->loadViewsFrom(__DIR__.'/../../resources/views', 'uconfig');
 
         // Registra il middleware
-    $this->app['router']->aliasMiddleware('uconfig.check_role', CheckConfigManagerRole::class);
+        $this->app['router']->aliasMiddleware('uconfig.check_role', CheckConfigManagerRole::class);
     }
 
     /**
