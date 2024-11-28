@@ -61,24 +61,13 @@ class UConfig
         }
     }
 
-    public function saveToDatabase(): void
+    public function saveToDatabase()
     {
-        try {
-            $pdo = $this->databaseConnection->getPDOInstance();
-            $pdo->beginTransaction();
-
-            $stmt = $pdo->prepare("INSERT INTO uconfig (`key`, `value`) VALUES (:key, :value)
-                                   ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
-
-            foreach ($this->config as $key => $value) {
-                $stmt->execute([':key' => $key, ':value' => $value]);
-            }
-
-            $pdo->commit();
-        } catch (\PDOException $e) {
-            $pdo->rollBack();
-            $this->logger->error("Errore nel salvataggio della configurazione nel database: " . $e->getMessage());
-            throw new \RuntimeException("Impossibile salvare la configurazione nel database.");
+        foreach ($this->config as $key => $value) {
+            DB::table('uconfig')->updateOrInsert(
+                ['key' => $key],
+                ['value' => $value]
+            );
         }
     }
 
