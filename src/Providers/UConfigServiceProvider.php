@@ -35,13 +35,13 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
     public function boot()
     {
         $this->publishes([
-            __DIR__.'/../config/uconfig.php' => $this->app->configPath('uconfig.php'),
+            __DIR__.'/../../config/uconfig.php' => $this->app->configPath('uconfig.php'),
         ], 'uconfig-config');
 
         // Pubblica le migrazioni
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../database/migrations' => $this->app->databasePath('migrations'),
+                __DIR__.'/../../database/migrations' => $this->app->databasePath('migrations'),
             ], 'uconfig-migrations');
         }
 
