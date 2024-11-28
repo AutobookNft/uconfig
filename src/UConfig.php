@@ -2,6 +2,7 @@
 
 namespace Fabio\UConfig;
 
+use Illuminate\Support\Facades\Log;
 use PDO;
 
 class UConfig
@@ -20,17 +21,23 @@ class UConfig
 
     public function loadConfig(string $source = null, array $options = []): void
     {
-        if ($source === null) {
-            // Carica da file di default
-            $this->loadFromFile(config_path('uconfig.php'));
-        } elseif (is_string($source) && strpos($source, '.php') !== false) {
+        // Inizializza l'array di configurazione
+        $this->config = [];
+
+        // Carica dal file di configurazione di default
+        $this->loadFromFile(config_path('uconfig.php'));
+        Log::channel('florenceegi')->info('Class: UconfigController. Method: loadConfig(). Action: Caricato da file di default');
+
+        // Se è stato specificato un file sorgente, carica anche da quello
+        if (is_string($source) && strpos($source, '.php') !== false) {
             $this->loadFromFile($source);
-        } elseif (is_string($source) && $this->isValidDatabaseTable($source)) {
-            $this->loadFromDatabase($source, $options);
-        } else {
-            // Gestione dell'errore per sorgente non valida
-            $this->logger->error("Sorgente di configurazione non valida: " . var_export($source, true));
-            throw new \InvalidArgumentException("La sorgente di configurazione specificata non è valida.");
+            Log::channel('florenceegi')->info('Class: UconfigController. Method: loadConfig(). Action: Caricato da file specificato: ' . $source);
+        }
+
+        // Carica dal database
+        if ($this->isValidDatabaseTable('uconfig')) {
+            $this->loadFromDatabase('uconfig', $options);
+            Log::channel('florenceegi')->info('Class: UconfigController. Method: loadConfig(). Action: Caricato dal database');
         }
     }
 
@@ -46,18 +53,35 @@ class UConfig
             throw new \RuntimeException("Impossibile caricare il file di configurazione: $filePath");
         }
 
-        $this->config = require $filePath;
+        $config = require $filePath;
+
+        // Unisce le configurazioni
+        $this->config = array_merge($this->config, $config);
     }
 
     private function loadFromDatabase(string $tableName, array $options = []): void
     {
         try {
             $pdo = $this->databaseConnection->getPDOInstance();
-            $stmt = $pdo->prepare("SELECT * FROM $tableName");
+            $stmt = $pdo->prepare("SELECT `key`, `value` FROM $tableName");
             $stmt->execute();
-            $this->config = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            $data = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+            // Decodifica eventuali valori JSON
+            foreach ($data as $key => $value) {
+                $decoded = json_decode($value, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $data[$key] = $decoded;
+                } else {
+                    $data[$key] = $value;
+                }
+            }
+
+            // Unisce le configurazioni
+            $this->config = array_merge($this->config, $data);
         } catch (\PDOException $e) {
             $this->logger->error("Errore nel caricamento della configurazione dal database: " . $e->getMessage());
+            throw new \RuntimeException("Impossibile caricare la configurazione dal database.");
         }
     }
 
@@ -100,6 +124,7 @@ class UConfig
         if (is_string($value)) {
             $decoded = json_decode($value, true);
             if (json_last_error() === JSON_ERROR_NONE) {
+                    
                 return $decoded;
             }
         }
