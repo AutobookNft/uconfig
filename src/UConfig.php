@@ -71,6 +71,10 @@ class UConfig
                                    ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
 
             foreach ($this->config as $key => $value) {
+                if (!is_scalar($value)) {
+                    $value = json_encode($value);
+                }
+
                 $stmt->execute([':key' => $key, ':value' => $value]);
             }
 
@@ -91,7 +95,16 @@ class UConfig
      */
     public function get(string $key, mixed $default = null): mixed
     {
-        return $this->config[$key] ?? $default;
+        $value = $this->config[$key] ?? $default;
+
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $decoded;
+            }
+        }
+
+        return $value;
     }
 
     /**

@@ -10,8 +10,8 @@ class CreateUconfigTable extends Migration
     {
         Schema::create('uconfig', function (Blueprint $table) {
             $table->string('key')->primary();
-            $table->text('value')->nullable();
-            $table->text('note')->nullable();
+            $table->longText('value')->nullable();
+            $table->longText('note')->nullable();
             $table->timestamps();
         });
     }
