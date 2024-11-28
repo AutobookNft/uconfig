@@ -1,9 +1,15 @@
 <?php
 
-namespace Fabio\UConfig;
+namespace UltraProject\UConfig;
 
 use Illuminate\Support\Facades\Log;
-use PDO;
+use Illuminate\Support\Facades\Crypt;
+use UltraProject\UConfig\Models\UConfig as UConfigModel;
+use UltraProject\UConfig\Models\UConfigVersion;
+use Illuminate\Support\Facades\Auth;
+use UltraProject\UConfig\Logger;
+use UltraProject\UConfig\DatabaseConnection;
+use UltraProject\UConfig\EnvLoader;
 
 class UConfig
 {
@@ -11,12 +17,14 @@ class UConfig
     private $logger;
     private $databaseConnection;
     private $envLoader;
+    private $app;
 
-    public function __construct(Logger $logger, DatabaseConnection $databaseConnection, EnvLoader $envLoader)
+    public function __construct(Logger $logger, DatabaseConnection $databaseConnection, EnvLoader $envLoader, $app)
     {
         $this->logger = $logger;
         $this->databaseConnection = $databaseConnection;
         $this->envLoader = $envLoader;
+        $this->app = $app;
     }
 
     public function loadConfig(string $source = null, array $options = []): void
@@ -25,7 +33,7 @@ class UConfig
         $this->config = [];
 
         // Carica dal file di configurazione di default
-        $this->loadFromFile(config_path('uconfig.php'));
+        $this->loadFromFile($this->app->configPath('uconfig.php'));
         Log::channel('florenceegi')->info('Class: UconfigController. Method: loadConfig(). Action: Caricato da file di default');
 
         // Se è stato specificato un file sorgente, carica anche da quello
@@ -34,9 +42,13 @@ class UConfig
             Log::channel('florenceegi')->info('Class: UconfigController. Method: loadConfig(). Action: Caricato da file specificato: ' . $source);
         }
 
+        // Carica le configurazioni dall'ambiente
+        $this->loadFromEnv();
+        Log::channel('florenceegi')->info('Class: UconfigController. Method: loadConfig(). Action: Caricato da .env');
+
         // Carica dal database
         if ($this->isValidDatabaseTable('uconfig')) {
-            $this->loadFromDatabase('uconfig', $options);
+            $this->loadFromDatabase($options);
             Log::channel('florenceegi')->info('Class: UconfigController. Method: loadConfig(). Action: Caricato dal database');
         }
     }
@@ -59,54 +71,61 @@ class UConfig
         $this->config = array_merge($this->config, $config);
     }
 
-    private function loadFromDatabase(string $tableName, array $options = []): void
+    private function loadFromDatabase(): void
     {
-        try {
-            $pdo = $this->databaseConnection->getPDOInstance();
-            $stmt = $pdo->prepare("SELECT `key`, `value` FROM $tableName");
-            $stmt->execute();
-            $data = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+        $configs = UConfigModel::all();
 
-            // Decodifica eventuali valori JSON
-            foreach ($data as $key => $value) {
-                $decoded = json_decode($value, true);
-                if (json_last_error() === JSON_ERROR_NONE) {
-                    $data[$key] = $decoded;
-                } else {
-                    $data[$key] = $value;
-                }
+        foreach ($configs as $config) {
+            // Decripta il valore
+            $decryptedValue = Crypt::decryptString($config->value);
+
+            // Decodifica il JSON se necessario
+            $decodedValue = json_decode($decryptedValue, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $decryptedValue = $decodedValue;
             }
 
-            // Unisce le configurazioni
-            $this->config = array_merge($this->config, $data);
-        } catch (\PDOException $e) {
-            $this->logger->error("Errore nel caricamento della configurazione dal database: " . $e->getMessage());
-            throw new \RuntimeException("Impossibile caricare la configurazione dal database.");
+            $this->config[$config->key] = [
+                'value' => $decryptedValue,
+                'category' => $config->category,
+                'note' => $config->note,
+            ];
         }
     }
 
     public function saveToDatabase(): void
     {
-        try {
-            $pdo = $this->databaseConnection->getPDOInstance();
-            $pdo->beginTransaction();
+        foreach ($this->config as $key => $configItem) {
+            $value = $configItem['value'];
+            $category = $configItem['category'] ?? null;
+            $note = $configItem['note'] ?? null;
 
-            $stmt = $pdo->prepare("INSERT INTO uconfig (`key`, `value`) VALUES (:key, :value)
-                                   ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
-
-            foreach ($this->config as $key => $value) {
-                if (!is_scalar($value)) {
-                    $value = json_encode($value);
-                }
-
-                $stmt->execute([':key' => $key, ':value' => $value]);
+            if (!is_scalar($value)) {
+                $value = json_encode($value);
             }
 
-            $pdo->commit();
-        } catch (\PDOException $e) {
-            $pdo->rollBack();
-            $this->logger->error("Errore nel salvataggio della configurazione nel database: " . $e->getMessage());
-            throw new \RuntimeException("Impossibile salvare la configurazione nel database.");
+            // Cripta il valore
+            $encryptedValue = Crypt::encryptString($value);
+
+            // Salva o aggiorna la configurazione
+            UConfigModel::updateOrCreate(
+                ['key' => $key],
+                [
+                    'category' => $category,
+                    'value' => $encryptedValue,
+                    'note' => $note,
+                ]
+            );
+
+            // Registra la versione
+            UConfigVersion::create([
+                'key' => $key,
+                'category' => $category,
+                'value' => $encryptedValue,
+                'note' => $note,
+                'user_id' => Auth::id(),
+                'action' => 'updated',
+            ]);
         }
     }
 
@@ -124,7 +143,6 @@ class UConfig
         if (is_string($value)) {
             $decoded = json_decode($value, true);
             if (json_last_error() === JSON_ERROR_NONE) {
-                    
                 return $decoded;
             }
         }
@@ -177,5 +195,14 @@ class UConfig
             $this->logger->error("Errore durante la verifica della tabella: " . $e->getMessage());
             return false;
         }
+    }
+
+    private function loadFromEnv(): void
+    {
+        // Recupera tutte le variabili d'ambiente caricate dall'EnvLoader
+        $envConfig = $this->envLoader->all();
+
+        // Unisce le configurazioni
+        $this->config = array_merge($this->config, $envConfig);
     }
 } 

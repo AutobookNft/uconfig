@@ -1,8 +1,9 @@
 <?php
 
-namespace Fabio\UConfig;
+namespace UltraProject\UConfig;
 
 use PDO;
+use UltraProject\UConfig\EnvLoader;
 
 class DatabaseConnection
 {

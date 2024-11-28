@@ -1,6 +1,6 @@
 <?php
 
-namespace Fabio\UConfig;
+namespace UltraProject\UConfig;
 
 class Logger
 {

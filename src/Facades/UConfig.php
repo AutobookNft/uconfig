@@ -1,6 +1,6 @@
 <?php
 
-namespace Fabio\UConfig\Facades;
+namespace UltraProject\UConfig\Facades;
 
 use Illuminate\Support\Facades\Facade;
 

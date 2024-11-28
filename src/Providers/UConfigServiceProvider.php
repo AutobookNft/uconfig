@@ -1,13 +1,14 @@
 <?php
 
-namespace Fabio\UConfig\Providers;
+namespace UltraProject\UConfig\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Support\DeferrableProvider;
-use Fabio\UConfig\UConfig;
-use Fabio\UConfig\Logger;
-use Fabio\UConfig\DatabaseConnection;
-use Fabio\UConfig\EnvLoader;
+use UltraProject\UConfig\UConfig;
+use UltraProject\UConfig\Logger;
+use UltraProject\UConfig\DatabaseConnection;
+use UltraProject\UConfig\EnvLoader;
+use UltraProject\UConfig\Middleware\CheckConfigManagerRole;
 
 class UConfigServiceProvider extends ServiceProvider implements DeferrableProvider
 {
@@ -18,11 +19,11 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
      */
     public function register()
     {
-        $this->app->bind('uconfig', function ($app) {
+        $this->app->bind('uconfig', function ($app) {   
             $envLoader = new EnvLoader();
             $logger = new Logger();
             $databaseConnection = DatabaseConnection::getInstance($envLoader);
-            return new UConfig($logger, $databaseConnection, $envLoader);
+            return new UConfig($logger, $databaseConnection, $envLoader, $app);
         });
     }
 
@@ -34,17 +35,32 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
     public function boot()
     {
         $this->publishes([
-            __DIR__.'/../config/uconfig.php' => config_path('uconfig.php'),
+            __DIR__.'/../config/uconfig.php' => $this->app->configPath('uconfig.php'),
         ], 'uconfig-config');
 
-        // Pubblica la migration
+        // Pubblica le migrazioni
         if ($this->app->runningInConsole()) {
-            if (!class_exists('CreateUconfigTable')) {
-                $this->publishes([
-                    __DIR__.'/../database/migrations/create_uconfig_table.php.stub' => database_path('migrations/' . date('Y_m_d_His') . '_create_uconfig_table.php'),
-                ], 'uconfig-migrations');
-            }
+            $this->publishes([
+                __DIR__.'/../database/migrations' => $this->app->databasePath('migrations'),
+            ], 'uconfig-migrations');
         }
+
+        // Pubblica le rotte
+        $this->publishes([
+            __DIR__.'/../routes/web.php' => base_path('routes/uconfig.php'),
+        ], 'uconfig-routes');
+
+        // Carica le rotte pubblicate o quelle predefinite
+        if (file_exists(base_path('routes/uconfig.php'))) {
+            $this->loadRoutesFrom(base_path('routes/uconfig.php'));
+        } else {
+            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        }
+
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'uconfig');
+
+        // Registra il middleware
+    $this->app['router']->aliasMiddleware('uconfig.check_role', CheckConfigManagerRole::class);
     }
 
     /**
