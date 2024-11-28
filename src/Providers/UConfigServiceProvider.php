@@ -8,7 +8,7 @@ use UltraProject\UConfig\UConfig;
 use UltraProject\UConfig\Logger;
 use UltraProject\UConfig\DatabaseConnection;
 use UltraProject\UConfig\EnvLoader;
-use UltraProject\UConfig\Middleware\CheckConfigManagerRole;
+use UltraProject\UConfig\Http\Middleware\CheckConfigManagerRole;
 
 class UConfigServiceProvider extends ServiceProvider implements DeferrableProvider
 {
