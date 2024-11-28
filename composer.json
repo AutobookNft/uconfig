@@ -6,8 +6,8 @@
     "version": "1.0.0",
     "autoload": {
         "psr-4": {
-            "UltraProject\\UConfig\\": "src/",
-            "UltraProject\\UConfig\\Middleware\\": "src/Middleware/"    
+            "UltraProject\\UConfig\\": "src/"
+            
         }
     },
     "suggest": {
