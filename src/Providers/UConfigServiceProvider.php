@@ -65,7 +65,10 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
             $this->loadRoutesFrom(__DIR__.'/../../routes/web.php');
         }
 
-        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'uconfig');
+        // Pubblica le viste
+        $this->publishes([
+            __DIR__.'/../../resources/views' => resource_path('views/vendor/uconfig'),  
+        ], 'uconfig-views');
 
         // Registra il middleware
         $this->app['router']->aliasMiddleware('uconfig.check_role', CheckConfigManagerRole::class);
