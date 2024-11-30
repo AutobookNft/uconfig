@@ -46,7 +46,16 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
                 // Pubblica il file di configurazione
                 __DIR__.'/../../config/uconfig.php' => $this->app->configPath('uconfig.php'),
                 __DIR__.'/../../routes/web.php' => $this->app->basePath('routes/uconfig.php'),
+                // Pubblica il file di alias
+                __DIR__.'/../../config/aliases.php' => base_path('bootstrap/aliases.php'),
             ], 'uconfig-resources'); // Usa un unico tag per tutte le risorse
+        }
+
+        // Controlla se il file di alias esiste già
+        if (file_exists(base_path('bootstrap/aliases.php'))) {
+            $this->app['console']->info('Attenzione: il file aliases.php esiste già. Assicurati di aggiungere la seguente riga:');
+            $this->app['console']->info("'UConfig' => UltraProject\\UConfig\\Facades\\UConfig::class,");
+            $this->app['console']->info('Per ulteriori dettagli, fai riferimento alla documentazione nella sezione Facades: UConfig.');
         }
 
         // Carica le rotte pubblicate o quelle predefinite

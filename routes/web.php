@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use UltraProject\UConfig\Http\Controllers\UConfigController;
 
 Route::group([
-    'middleware' => ['web', 'auth', 'config_manager'],
+    'middleware' => ['web', 'auth', 'uconfig.check_role'],
 ], function () {
     Route::resource('config', UConfigController::class)->names('config.index');
     Route::get('config/{key}/delete', [UConfigController::class, 'destroy'])->name('config.delete');
