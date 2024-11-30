@@ -34,29 +34,19 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
      */
     public function boot()
     {
-        $this->publishes([
-            __DIR__.'/../../config/uconfig.php' => $this->app->configPath('uconfig.php'),
-        ], 'uconfig-config');
-
-        // Pubblica le migrazioni
+         // Pubblica le risorse
         if ($this->app->runningInConsole()) {
             $this->publishes([
+                // Pubblica le migrazioni
                 __DIR__.'/../../database/migrations/create_uconfig_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_table.php'),
-            ], 'uconfig-migrations');
-
-            $this->publishes([
                 __DIR__.'/../../database/migrations/create_uconfig_versions_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_versions_table.php'),
-            ], 'uconfig-migrations');
-
-            $this->publishes([
                 __DIR__.'/../../database/migrations/create_uconfig_audit_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_audit_table.php'),
-            ], 'uconfig-migrations');
+                // Pubblica le viste
+                __DIR__.'/../../resources/views' => resource_path('views/vendor/uconfig'),
+                // Pubblica il file di configurazione
+                __DIR__.'/../config/uconfig.php' => $this->app->configPath('uconfig.php'),
+            ], 'uconfig-resources'); // Usa un unico tag per tutte le risorse
         }
-
-        // Pubblica le rotte
-        $this->publishes([
-            __DIR__.'/../../routes/web.php' => base_path('routes/uconfig.php'),
-        ], 'uconfig-routes');
 
         // Carica le rotte pubblicate o quelle predefinite
         if (file_exists(base_path('routes/uconfig.php'))) {
@@ -65,14 +55,9 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
             $this->loadRoutesFrom(__DIR__.'/../../routes/web.php');
         }
 
-        // Pubblica le viste
-        $this->publishes([
-            __DIR__.'/../../resources/views' => resource_path('views/vendor/uconfig'),  
-        ], 'uconfig-views');
-
         // Registra il middleware
-        $this->app['router']->aliasMiddleware('uconfig.check_role', CheckConfigManagerRole::class);
-    }
+            $this->app['router']->aliasMiddleware('uconfig.check_role', CheckConfigManagerRole::class);
+        }
 
     /**
      * Determina se il provider è "differibile".
