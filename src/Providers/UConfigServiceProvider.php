@@ -9,6 +9,7 @@ use UltraProject\UConfig\Logger;
 use UltraProject\UConfig\DatabaseConnection;
 use UltraProject\UConfig\EnvLoader;
 use UltraProject\UConfig\Http\Middleware\CheckConfigManagerRole;
+use Illuminate\Support\Facades\Artisan;
 
 class UConfigServiceProvider extends ServiceProvider implements DeferrableProvider
 {
@@ -28,7 +29,7 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
     }
 
     /**
-     * Esegue le azioni di bootstrap dei servizi.
+     * Esegue le azioni di bootstrap dei servizi.   
      *
      * @return void
      */
@@ -36,6 +37,13 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
     {
          // Pubblica le risorse
         if ($this->app->runningInConsole()) {
+             // Controlla se il file di alias esiste già
+            if (file_exists(base_path('bootstrap/aliases.php'))) {
+                $output = new \Symfony\Component\Console\Output\ConsoleOutput();
+                $output->writeln('<info>Attenzione: il file aliases.php esiste già. Assicurati di aggiungere la seguente riga:</info>');
+                $output->writeln("'UConfig' => UltraProject\\UConfig\\Facades\\UConfig::class,");
+                $output->writeln('<info>Per ulteriori dettagli, fai riferimento alla documentazione nella sezione Facades: UConfig.</info>');
+            }
             $this->publishes([
                 // Pubblica le migrazioni
                 __DIR__.'/../../database/migrations/create_uconfig_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_table.php'),
@@ -49,13 +57,7 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
                 // Pubblica il file di alias
                 __DIR__.'/../../config/aliases.php' => base_path('bootstrap/aliases.php'),
             ], 'uconfig-resources'); // Usa un unico tag per tutte le risorse
-        }
-
-        // Controlla se il file di alias esiste già
-        if (file_exists(base_path('bootstrap/aliases.php'))) {
-            $this->app['console']->info('Attenzione: il file aliases.php esiste già. Assicurati di aggiungere la seguente riga:');
-            $this->app['console']->info("'UConfig' => UltraProject\\UConfig\\Facades\\UConfig::class,");
-            $this->app['console']->info('Per ulteriori dettagli, fai riferimento alla documentazione nella sezione Facades: UConfig.');
+            
         }
 
         // Carica le rotte pubblicate o quelle predefinite
@@ -66,8 +68,8 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
         }
 
         // Registra il middleware
-            $this->app['router']->aliasMiddleware('uconfig.check_role', CheckConfigManagerRole::class);
-        }
+        $this->app['router']->aliasMiddleware('uconfig.check_role', CheckConfigManagerRole::class);
+    }
 
     /**
      * Determina se il provider è "differibile".
