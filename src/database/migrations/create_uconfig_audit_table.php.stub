@@ -10,16 +10,16 @@ class CreateUconfigAuditTable extends Migration
     {
         Schema::create('uconfig_audit', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->unsignedBigInteger('uconfig_id');
+            $table->string('action'); // 'created', 'updated', 'deleted'
+            $table->longText('old_value')->nullable();
+            $table->longText('new_value')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->string('action'); // 'viewed', 'created', 'updated', 'deleted', 'restored'
-            $table->string('key')->nullable();
-            $table->json('details')->nullable();
-            $table->ipAddress('ip_address')->nullable();
-            $table->string('user_agent')->nullable();
             $table->timestamps();
 
-            // Chiave esterna
-            $table->foreign('user_id')->references('id')->on('users');
+            // Chiavi esterne
+            $table->foreign('uconfig_id')->references('id')->on('uconfig')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 

@@ -55,7 +55,7 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
                 __DIR__.'/../config/uconfig.php' => $this->app->configPath('uconfig.php'),
                 __DIR__.'/../routes/web.php' => $this->app->basePath('routes/uconfig.php'),
                 // Pubblica il file di alias
-                __DIR__.'/../../config/aliases.php' => base_path('bootstrap/aliases.php'),
+                __DIR__.'/../config/aliases.php' => base_path('bootstrap/aliases.php'),
             ], 'uconfig-resources'); // Usa un unico tag per tutte le risorse
             
         }

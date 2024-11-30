@@ -10,17 +10,13 @@ class CreateUconfigVersionsTable extends Migration
     {
         Schema::create('uconfig_versions', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('key');
-            $table->string('category')->nullable();
-            $table->longText('value')->nullable();
-            $table->text('note')->nullable();
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->string('action'); // 'created', 'updated', 'deleted'
+            $table->unsignedBigInteger('uconfig_id');
+            $table->integer('version');
+            $table->longText('value');
             $table->timestamps();
 
-            // Indici e chiavi esterne
-            $table->foreign('key')->references('key')->on('uconfig');
-            $table->foreign('user_id')->references('id')->on('users');
+            // Chiave esterna
+            $table->foreign('uconfig_id')->references('id')->on('uconfig')->onDelete('cascade');
         });
     }
 

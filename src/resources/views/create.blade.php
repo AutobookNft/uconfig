@@ -22,7 +22,7 @@
             <textarea name="note" rows="2" class="w-full px-3 py-2 border rounded-md"></textarea>
         </div>
         <div class="flex justify-end">
-            <a href="{{ route('uconfig.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md mr-2">Annulla</a>
+            <a href="{{ route('vendor.uconfig.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded-md mr-2">Annulla</a>
             <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">Salva</button>
         </div>
     </form>
