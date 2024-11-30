@@ -32,22 +32,24 @@ class UConfigController extends Controller
 
         $config = UConfig::create($data);
 
-        // Crea una versione iniziale
-        UConfigVersion::create([
-            'uconfig_id' => $config->id,
-            'version' => 1,
-            'value' => $config->value,
-        ]);
+        if ($config) {
+            UConfigVersion::create([
+                'uconfig_id' => $config->id,
+                'version' => 1,
+                'value' => $config->value,
+            ]);
 
-        // Registra l'audit
-        UConfigAudit::create([
-            'uconfig_id' => $config->id,
-            'action' => 'created',
-            'new_value' => $config->value,
-            'user_id' => $userId,
-        ]);
+            UConfigAudit::create([
+                'uconfig_id' => $config->id,
+                'action' => 'created',
+                'new_value' => $config->value,
+                'user_id' => $userId,
+            ]);
 
-        return redirect()->route('uconfig.index')->with('success', 'Configurazione aggiunta con successo.');
+            return redirect()->route('uconfig.index')->with('success', 'Configurazione aggiunta con successo.');
+        }
+
+        return redirect()->route('uconfig.index')->with('error', 'Errore durante la creazione della configurazione.');
     }
 
     public function edit($id)

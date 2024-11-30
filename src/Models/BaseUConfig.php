@@ -5,7 +5,7 @@ namespace UltraProject\UConfig\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class UConfig extends Model
+class BaseUConfig extends Model
 {
     use SoftDeletes;
 
@@ -28,4 +28,4 @@ class UConfig extends Model
         'category',
         'note',
     ];
-}
+} 
