@@ -45,7 +45,7 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
                 __DIR__.'/../../resources/views' => resource_path('views/vendor/uconfig'),
                 // Pubblica il file di configurazione
                 __DIR__.'/../config/uconfig.php' => $this->app->configPath('uconfig.php'),
-                __DIR__.'/../routes/uconfig.php' => $this->app->basePath('routes/uconfig.php'),
+                __DIR__.'/../routes/web.php' => $this->app->basePath('routes/uconfig.php'),
             ], 'uconfig-resources'); // Usa un unico tag per tutte le risorse
         }
 
