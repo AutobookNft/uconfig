@@ -46,14 +46,14 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
             }
             $this->publishes([
                 // Pubblica le migrazioni
-                __DIR__.'/../../database/migrations/create_uconfig_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_table.php'),
-                __DIR__.'/../../database/migrations/create_uconfig_versions_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_versions_table.php'),
-                __DIR__.'/../../database/migrations/create_uconfig_audit_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_audit_table.php'),
+                __DIR__.'/../database/migrations/create_uconfig_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_table.php'),
+                __DIR__.'/../database/migrations/create_uconfig_versions_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_versions_table.php'),
+                __DIR__.'/../database/migrations/create_uconfig_audit_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_audit_table.php'),
                 // Pubblica le viste
-                __DIR__.'/../../resources/views' => resource_path('views/vendor/uconfig'),
+                __DIR__.'/../resources/views' => resource_path('views/vendor/uconfig'),
                 // Pubblica il file di configurazione
-                __DIR__.'/../../config/uconfig.php' => $this->app->configPath('uconfig.php'),
-                __DIR__.'/../../routes/web.php' => $this->app->basePath('routes/uconfig.php'),
+                __DIR__.'/../config/uconfig.php' => $this->app->configPath('uconfig.php'),
+                __DIR__.'/../routes/web.php' => $this->app->basePath('routes/uconfig.php'),
                 // Pubblica il file di alias
                 __DIR__.'/../../config/aliases.php' => base_path('bootstrap/aliases.php'),
             ], 'uconfig-resources'); // Usa un unico tag per tutte le risorse
@@ -64,7 +64,7 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
         if (file_exists(base_path('routes/uconfig.php'))) {
             $this->loadRoutesFrom(base_path('routes/uconfig.php'));
         } else {
-            $this->loadRoutesFrom(__DIR__.'/../../routes/web.php');
+            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         }
 
         // Registra il middleware
