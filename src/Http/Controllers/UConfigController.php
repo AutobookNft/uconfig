@@ -106,4 +106,4 @@ class UConfigController extends Controller
 
         return redirect()->route('uconfig.index')->with('success', 'Configurazione eliminata con successo.');
     }
-} 
+}
