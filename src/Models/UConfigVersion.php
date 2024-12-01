@@ -2,6 +2,7 @@
 
 namespace UltraProject\UConfig\Models;
 
+use App\Casts\EncryptedCast;
 use Illuminate\Database\Eloquent\Model;
 
 class UConfigVersion extends Model
@@ -26,6 +27,10 @@ class UConfigVersion extends Model
     {
         return $this->belongsTo(UConfig::class);
     }
+
+    protected $casts = [
+        'value' => EncryptedCast::class,
+    ];
 
     
 } 

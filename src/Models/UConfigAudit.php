@@ -2,6 +2,7 @@
 
 namespace UltraProject\UConfig\Models;
 
+use App\Casts\EncryptedCast;
 use Illuminate\Database\Eloquent\Model;
 
 class UConfigAudit extends Model
@@ -20,4 +21,9 @@ class UConfigAudit extends Model
     {
         return $this->belongsTo(config('auth.providers.users.model'), 'user_id');
     }
+
+    protected $casts = [
+        'old_value' => EncryptedCast::class,
+        'new_value' => EncryptedCast::class,
+    ];
 } 

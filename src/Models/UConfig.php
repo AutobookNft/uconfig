@@ -2,6 +2,7 @@
 
 namespace UltraProject\UConfig\Models;
 
+use App\Casts\EncryptedCast;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -27,4 +28,8 @@ class UConfig extends Model
     {
         return $this->hasMany(UConfigVersion::class);
     }
+
+    protected $casts = [
+        'value' => EncryptedCast::class,
+    ];
 }
