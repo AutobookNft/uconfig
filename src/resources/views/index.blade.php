@@ -23,8 +23,8 @@
                         <td class="py-2 px-4">{{ $config->value }}</td>
                         <td class="py-2 px-4">{{ $config->note }}</td>
                         <td class="py-2 px-4">
-                            <a href="{{ route('vendor.uconfig.edit', $config->key) }}" class="text-yellow-600 hover:underline">Modifica</a>
-                            <form action="{{ route('vendor.uconfig.destroy', $config->key) }}" method="POST" style="display:inline;">
+                            <a href="{{ route('vendor.uconfig.edit', $config->id) }}" class="text-yellow-600 hover:underline">Modifica</a>
+                            <form action="{{ route('vendor.uconfig.destroy', $config->id) }}" method="POST" style="display:inline;">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:underline ml-2">Elimina</button>

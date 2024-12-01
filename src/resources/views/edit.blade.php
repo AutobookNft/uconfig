@@ -3,7 +3,7 @@
 @section('content')
 <div class="container">
     <h1>Modifica Configurazione</h1>
-    <form action="{{ route('uconfig.update', $config->key) }}" method="POST">
+    <form action="{{ route('uconfig.update', $config->id) }}" method="POST">
         @csrf
         @method('PUT')
         <div class="mb-4">
