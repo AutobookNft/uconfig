@@ -8,8 +8,8 @@ class CreateUConfigAuditTable extends Migration
     {
         Schema::create('uconfig_audit', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('uconfig_id');
-            $table->string('action'); // 'created', 'updated', 'deleted'
+            $table->unsignedBigInteger('uconfig_id')->nullable();
+            $table->string('action')->nullable(); // 'created', 'updated', 'deleted'
             $table->longText('old_value')->nullable();
             $table->longText('new_value')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();

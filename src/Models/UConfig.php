@@ -27,5 +27,10 @@ class UConfig extends Model
         'value',
         'category',
         'note',
-    ];
+    ];  
+
+    public function versions()
+    {
+        return $this->hasMany(UConfigVersion::class);
+    }
 }

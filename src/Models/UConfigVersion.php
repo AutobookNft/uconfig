@@ -9,6 +9,7 @@ class UConfigVersion extends Model
     protected $table = 'uconfig_versions';
 
     protected $fillable = [
+        'uconfig_id',
         'key',
         'category',
         'value',
@@ -21,4 +22,11 @@ class UConfigVersion extends Model
     {
         return $this->belongsTo(config('auth.providers.users.model'), 'user_id');
     }
+
+    public function uconfig()
+    {
+        return $this->belongsTo(UConfig::class);
+    }
+
+    
 } 
