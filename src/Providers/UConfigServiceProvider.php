@@ -9,7 +9,8 @@ use UltraProject\UConfig\Logger;
 use UltraProject\UConfig\DatabaseConnection;
 use UltraProject\UConfig\EnvLoader;
 use UltraProject\UConfig\Http\Middleware\CheckConfigManagerRole;
-use Illuminate\Support\Facades\Artisan;
+use Carbon\Carbon;
+
 
 class UConfigServiceProvider extends ServiceProvider implements DeferrableProvider
 {
@@ -45,10 +46,10 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
                 $output->writeln('<info>Per ulteriori dettagli, fai riferimento alla documentazione nella sezione Facades: UConfig.</info>');
             }
             $this->publishes([
-                // Pubblica le migrazioni
-                __DIR__.'/../database/migrations/create_uconfig_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_table.php'),
-                __DIR__.'/../database/migrations/create_uconfig_versions_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_versions_table.php'),
-                __DIR__.'/../database/migrations/create_uconfig_audit_table.php.stub' => $this->app->databasePath('migrations/' . date('Y_m_d_His') . '_create_uconfig_audit_table.php'),
+                // Pubblica i file delle migrazioni
+                __DIR__.'/../database/migrations/create_uconfig_table.php.stub' => $this->app->databasePath('migrations/' . Carbon::now()->format('Y_m_d_Hisv') . '_create_uconfig_table.php'),
+                __DIR__.'/../database/migrations/create_uconfig_versions_table.php.stub' => $this->app->databasePath('migrations/' . Carbon::now()->format('Y_m_d_Hisv') . '_create_uconfig_versions_table.php'),
+                __DIR__.'/../database/migrations/create_uconfig_audit_table.php.stub' => $this->app->databasePath('migrations/' . Carbon::now()->format('Y_m_d_Hisv') . '_create_uconfig_audit_table.php'),
                 // Pubblica le viste
                 __DIR__.'/../resources/views' => resource_path('views/vendor/uconfig'),
                 // Pubblica il file di configurazione
