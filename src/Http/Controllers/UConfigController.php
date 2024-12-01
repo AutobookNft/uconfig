@@ -28,7 +28,7 @@ class UConfigController extends Controller
         // Log::info('store: newValue: request:' . $request);
 
         $data = $request->validate([
-            'key' => 'required|unique:uconfig,key',
+            'key' => 'required|unique|string',
             'value' => 'required',
             'category' => 'nullable|string',
             'note' => 'nullable|string',
