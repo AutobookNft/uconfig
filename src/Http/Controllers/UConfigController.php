@@ -97,7 +97,7 @@ class UConfigController extends Controller
         $config = UConfig::findOrFail($id);
 
         $data = $request->validate([
-            'key' => 'required|unique|string',
+            'key' => 'required|string',
             'value' => 'required|string',
             'category' => 'nullable|string',
             'note' => 'nullable|string',

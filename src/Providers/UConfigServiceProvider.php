@@ -47,9 +47,9 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
             }
             $this->publishes([
                 // Pubblica i file delle migrazioni
-                __DIR__.'/../database/migrations/create_uconfig_table.php.stub' => $this->app->databasePath('migrations/' . Carbon::now()->format('Y_m_d_Hisv') . '01_create_uconfig_table.php'),
-                __DIR__.'/../database/migrations/create_uconfig_versions_table.php.stub' => $this->app->databasePath('migrations/' . Carbon::now()->format('Y_m_d_Hisv') . '02_create_uconfig_versions_table.php'),
-                __DIR__.'/../database/migrations/create_uconfig_audit_table.php.stub' => $this->app->databasePath('migrations/' . Carbon::now()->format('Y_m_d_Hisv') . '03_create_uconfig_audit_table.php'),
+                __DIR__.'/../database/migrations/create_uconfig_table.php.stub' => $this->app->databasePath('migrations/' . Carbon::now()->format('Y_m_d_Hisu') . '01_create_uconfig_table.php'),
+                __DIR__.'/../database/migrations/create_uconfig_versions_table.php.stub' => $this->app->databasePath('migrations/' . Carbon::now()->format('Y_m_d_Hisu') . '02_create_uconfig_versions_table.php'),
+                __DIR__.'/../database/migrations/create_uconfig_audit_table.php.stub' => $this->app->databasePath('migrations/' . Carbon::now()->format('Y_m_d_Hisu') . '03_create_uconfig_audit_table.php'),
                 // Pubblica le viste
                 __DIR__.'/../resources/views' => resource_path('views/vendor/uconfig'),
                 // Pubblica il file di configurazione
