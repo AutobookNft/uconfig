@@ -2,7 +2,7 @@
 
 namespace UltraProject\UConfig\Models;
 
-use App\Casts\EncryptedCast;
+use UltraProject\UConfig\Casts\EncryptedCast;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
