@@ -9,12 +9,11 @@ class UConfigAudit extends Model
     protected $table = 'uconfig_audit';
 
     protected $fillable = [
-        'user_id',
+        'uconfig_id',
         'action',
-        'key',
-        'details',
-        'ip_address',
-        'user_agent',
+        'new_value',
+        'old_value',
+        'user_id',
     ];
 
     public function user()

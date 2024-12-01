@@ -10,12 +10,11 @@ class UConfigVersion extends Model
 
     protected $fillable = [
         'uconfig_id',
+        'version',
         'key',
         'category',
-        'value',
         'note',
-        'user_id',
-        'action',
+        'value',
     ];
 
     public function user()

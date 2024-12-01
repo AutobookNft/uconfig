@@ -11,12 +11,6 @@ class UConfig extends Model
 
     protected $table = 'uconfig';
 
-    protected $primaryKey = 'key';
-
-    public $incrementing = false;
-
-    protected $keyType = 'string';
-
     /**
      * Gli attributi che possono essere assegnati in massa.
      *
