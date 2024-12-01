@@ -7,10 +7,13 @@ class CreateUConfigVersionsTable extends Migration
     public function up()
     {
         Schema::create('uconfig_versions', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->unsignedBigInteger('uconfig_id')->nullable();
-            $table->integer('version')->default(1)->autoIncrement();
-            $table->longText('value')->nullable();
+            $table->id();
+            $table->unsignedBigInteger('uconfig_id');
+            $table->integer('version')->default(1);
+            $table->string('key')->nullable();
+            $table->string('category')->nullable();
+            $table->text('note')->nullable();
+            $table->longText('value');
             $table->timestamps();
 
             // Chiave esterna

@@ -7,7 +7,7 @@ class CreateUConfigTable extends Migration
     public function up()
     {
         Schema::create('uconfig', function (Blueprint $table) {
-            $table->bigIncrements('id'); // Chiave primaria
+            $table->id(); // Chiave primaria
             $table->string('key')->unique();
             $table->longText('value')->nullable();
             $table->string('category')->nullable();
