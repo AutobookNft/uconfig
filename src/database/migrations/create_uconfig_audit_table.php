@@ -1,17 +1,15 @@
-<?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUconfigAuditTable extends Migration
+class CreateUConfigAuditTable extends Migration
 {
     public function up()
     {
         Schema::create('uconfig_audit', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->unsignedBigInteger('uconfig_id');
-            $table->string('action'); // 'created', 'updated', 'deleted'
+            $table->id();
+            $table->unsignedBigInteger('uconfig_id')->nullable();
+            $table->string('action')->nullable(); // 'created', 'updated', 'deleted'
             $table->longText('old_value')->nullable();
             $table->longText('new_value')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();

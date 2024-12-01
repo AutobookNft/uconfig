@@ -1,17 +1,18 @@
-<?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUconfigVersionsTable extends Migration
+class CreateUConfigVersionsTable extends Migration
 {
     public function up()
     {
         Schema::create('uconfig_versions', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->id();
             $table->unsignedBigInteger('uconfig_id');
-            $table->integer('version');
+            $table->integer('version')->default(1);
+            $table->string('key')->nullable();
+            $table->string('category')->nullable();
+            $table->text('note')->nullable();
             $table->longText('value');
             $table->timestamps();
 
