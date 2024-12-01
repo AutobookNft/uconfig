@@ -15,7 +15,7 @@ class UConfigController extends Controller
     public function index()
     {
         $configs = UConfig::all();
-        return view('uconfig.index', compact('configs'));
+        return view('vendor.uconfig.index', compact('configs'));
     }
 
     public function create()
@@ -64,7 +64,7 @@ class UConfigController extends Controller
     public function edit($id)
     {
         $config = UConfig::findOrFail($id);
-        return view('uconfig.edit', compact('config'));
+        return view('vendor.uconfig.edit', compact('config'));
     }
 
     public function update(Request $request, $id, $userId = null)
