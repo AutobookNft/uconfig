@@ -2,207 +2,259 @@
 
 namespace UltraProject\UConfig;
 
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use UltraProject\UConfig\Models\UConfig as UConfigModel;
 use UltraProject\UConfig\Models\UConfigVersion;
-use Illuminate\Support\Facades\Auth;
-use UltraProject\UConfig\Logger;
-use UltraProject\UConfig\DatabaseConnection;
-use UltraProject\UConfig\EnvLoader;
+use UltraProject\UConfig\Models\UConfigAudit;
 
+/**
+ * UConfig - Centralized configuration management class.
+ */
 class UConfig
 {
+    /**
+     * In-memory configuration array.
+     *
+     * @var array
+     */
     private $config = [];
-    private $logger;
-    private $databaseConnection;
+
+    /**
+     * EnvLoader instance for .env variables.
+     *
+     * @var EnvLoader
+     */
     private $envLoader;
-    private $app;
 
-    public function __construct(Logger $logger, DatabaseConnection $databaseConnection, EnvLoader $envLoader, $app)
+    /**
+     * Cache key used to store the configurations.
+     *
+     * @var string
+     */
+    private const CACHE_KEY = 'uconfig.cache';
+
+    /**
+     * Constructor.
+     *
+     * @param EnvLoader $envLoader Instance to load environment variables.
+     */
+    public function __construct(EnvLoader $envLoader)
     {
-        $this->logger = $logger;
-        $this->databaseConnection = $databaseConnection;
         $this->envLoader = $envLoader;
-        $this->app = $app;
+        $this->loadConfig(); // Load configuration on initialization
     }
 
-    public function loadConfig(string $source = null, array $options = []): void
+    /**
+     * Load all configurations into memory from cache, database, and .env file.
+     */
+    public function loadConfig(): void
     {
-        // Inizializza l'array di configurazione
-        $this->config = [];
+        // Attempt to load from cache
+        $this->config = Cache::remember(self::CACHE_KEY, 3600, function () {
+            return $this->loadFromDatabase();
+        });
 
-        // Carica dal file di configurazione di default
-        $this->loadFromFile($this->app->configPath('uconfig.php'));
-        Log::channel('florenceegi')->info('Class: UconfigController. Method: loadConfig(). Action: Caricato da file di default');
-
-        // Se è stato specificato un file sorgente, carica anche da quello
-        if (is_string($source) && strpos($source, '.php') !== false) {
-            $this->loadFromFile($source);
-            Log::channel('florenceegi')->info('Class: UconfigController. Method: loadConfig(). Action: Caricato da file specificato: ' . $source);
-        }
-
-        // Carica le configurazioni dall'ambiente
+        // Merge with .env variables
         $this->loadFromEnv();
-        Log::channel('florenceegi')->info('Class: UconfigController. Method: loadConfig(). Action: Caricato da .env');
 
-        // Carica dal database
-        if ($this->isValidDatabaseTable('uconfig')) {
-            $this->loadFromDatabase($options);
-            Log::channel('florenceegi')->info('Class: UconfigController. Method: loadConfig(). Action: Caricato dal database');
-        }
+        Log::info('Configurations successfully loaded into memory.');
     }
 
-    public function getConfig(string $key, mixed $default = null): mixed
+    /**
+     * Load configurations from the database.
+     *
+     * @return array Configuration data from the database.
+     */
+    private function loadFromDatabase(): array
     {
-        return $this->config[$key] ?? $default;
-    }
-
-    private function loadFromFile(string $filePath): void
-    {
-        if (!file_exists($filePath) || !is_readable($filePath)) {
-            $this->logger->error("File di configurazione non trovato o non leggibile: $filePath");
-            throw new \RuntimeException("Impossibile caricare il file di configurazione: $filePath");
-        }
-
-        $config = require $filePath;
-
-        // Unisce le configurazioni
-        $this->config = array_merge($this->config, $config);
-    }
-
-    private function loadFromDatabase(): void
-    {
+        $configArray = [];
         $configs = UConfigModel::all();
 
         foreach ($configs as $config) {
-            // Decripta il valore
-            $decryptedValue = Crypt::decryptString($config->value);
-
-            // Decodifica il JSON se necessario
-            $decodedValue = json_decode($decryptedValue, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                $decryptedValue = $decodedValue;
+            try {
+                // Ensure the value is not null before decrypting
+                if ($config->value !== null) {
+                    $decryptedValue = Crypt::decryptString($config->value);
+                    $configArray[$config->key] = [
+                        'value' => $decryptedValue,
+                        'category' => $config->category,
+                    ];
+                } else {
+                    Log::warning("Configuration with key {$config->key} has a null value and will be ignored.");
+                }
+            } catch (\Exception $e) {
+                Log::error("Error decrypting value for key {$config->key}: " . $e->getMessage());
             }
-
-            $this->config[$config->key] = [
-                'value' => $decryptedValue,
-                'category' => $config->category,
-                'note' => $config->note,
-            ];
         }
+
+        return $configArray;
     }
 
-    public function saveToDatabase(): void
+    /**
+     * Load configurations from the .env file and merge them with existing configurations.
+     */
+    private function loadFromEnv(): void
     {
-        foreach ($this->config as $key => $configItem) {
-            $value = $configItem['value'];
-            $category = $configItem['category'] ?? null;
-            $note = $configItem['note'] ?? null;
+        $envConfig = $this->envLoader->all();
 
-            if (!is_scalar($value)) {
-                $value = json_encode($value);
+        foreach ($envConfig as $key => $value) {
+            if (!array_key_exists($key, $this->config)) {
+                $this->config[$key] = ['value' => $value];
             }
-
-            // Cripta il valore
-            $encryptedValue = Crypt::encryptString($value);
-
-            // Salva o aggiorna la configurazione
-            UConfigModel::updateOrCreate(
-                ['key' => $key],
-                [
-                    'category' => $category,
-                    'value' => $encryptedValue,
-                    'note' => $note,
-                ]
-            );
-
-            // Registra la versione
-            UConfigVersion::create([
-                'key' => $key,
-                'category' => $category,
-                'value' => $encryptedValue,
-                'note' => $note,
-                'user_id' => Auth::id(),
-                'action' => 'updated',
-            ]);
         }
     }
 
     /**
-     * Recupera un valore di configurazione.
+     * Retrieve a configuration value.
      *
-     * @param string $key
-     * @param mixed $default
-     * @return mixed
+     * @param string $key Configuration key.
+     * @param mixed $default Default value if key does not exist.
+     * @return mixed Configuration value.
      */
     public function get(string $key, mixed $default = null): mixed
     {
-        $value = $this->config[$key] ?? $default;
+        return $this->config[$key]['value'] ?? $default;
+    }
 
-        if (is_string($value)) {
-            $decoded = json_decode($value, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                return $decoded;
-            }
+    /**
+     * Set a configuration value and persist it to the database.
+     *
+     * @param string $key Configuration key.
+     * @param mixed $value Configuration value.
+     * @param string|null $category Configuration category (optional).
+     */
+    public function set(string $key, mixed $value, ?string $category = null): void
+    {
+        // Update in-memory configuration
+        $this->config[$key] = [
+            'value' => $value,
+            'category' => $category,
+        ];
+
+        // Save to database
+        $config = $this->saveToDatabase($key, $value, $category);
+
+        if ($config) {
+            $this->saveVersion($config, $value);
+            $this->saveAudit($config, 'updated', $value);
         }
 
-        return $value;
+        // Update cache
+        Cache::put(self::CACHE_KEY, $this->config, 3600);
     }
 
     /**
-     * Imposta un valore di configurazione.
+     * Save a configuration to the database.
      *
-     * @param string $key
-     * @param mixed $value
-     * @return void
+     * @param string $key Configuration key.
+     * @param mixed $value Configuration value.
+     * @param string|null $category Configuration category.
+     * @return UConfigModel|null Saved UConfigModel instance or null on failure.
      */
-    public function set(string $key, mixed $value): void
+    private function saveToDatabase(string $key, mixed $value, ?string $category): ?UConfigModel
     {
-        $this->config[$key] = $value;
-        // Opzionale: salva il valore nella sorgente (file o database)
+        try {
+            $encryptedValue = Crypt::encryptString(is_scalar($value) ? $value : json_encode($value));
+            $config = UConfigModel::updateOrCreate(
+                ['key' => $key],
+                ['value' => $encryptedValue, 'category' => $category]
+            );
+            Log::info("Configuration saved to database: $key");
+            return $config;
+        } catch (\Exception $e) {
+            Log::error("Error saving configuration $key to database: " . $e->getMessage());
+            return null;
+        }
     }
 
     /**
-     * Elimina una configurazione.
+     * Save a new version for a configuration.
      *
-     * @param string $key
-     * @return void
+     * @param UConfigModel $config UConfigModel instance.
+     * @param mixed $value Configuration value.
+     */
+    private function saveVersion(UConfigModel $config, mixed $value): void
+    {
+        try {
+            $latestVersion = UConfigVersion::where('uconfig_id', $config->id)->max('version') ?? 0;
+            $encryptedValue = Crypt::encryptString(is_scalar($value) ? $value : json_encode($value));
+
+            UConfigVersion::create([
+                'uconfig_id' => $config->id,
+                'version' => $latestVersion + 1,
+                'key' => $config->key,
+                'category' => $config->category,
+                'value' => $encryptedValue,
+            ]);
+
+            Log::info("Version registered for configuration: {$config->key}");
+        } catch (\Exception $e) {
+            Log::error("Error registering version for configuration {$config->key}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Save an audit log for a configuration.
+     *
+     * @param UConfigModel $config UConfigModel instance.
+     * @param string $action Action type (e.g., 'created', 'updated', 'deleted').
+     * @param mixed $newValue New configuration value.
+     */
+    private function saveAudit(UConfigModel $config, string $action, mixed $newValue): void
+    {
+        try {
+            $oldValue = $this->get($config->key);
+            $encryptedNewValue = Crypt::encryptString(is_scalar($newValue) ? $newValue : json_encode($newValue));
+            $encryptedOldValue = $oldValue ? Crypt::encryptString($oldValue) : null;
+
+            UConfigAudit::create([
+                'uconfig_id' => $config->id,
+                'action' => $action,
+                'new_value' => $encryptedNewValue,
+                'old_value' => $encryptedOldValue,
+                'user_id' => Auth::id(),
+            ]);
+
+            Log::info("Audit registered for action $action on configuration: {$config->key}");
+        } catch (\Exception $e) {
+            Log::error("Error registering audit for configuration {$config->key}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete a configuration from memory and database.
+     *
+     * @param string $key Configuration key.
      */
     public function delete(string $key): void
     {
         unset($this->config[$key]);
-        // Opzionale: rimuovi il valore dalla sorgente (file o database)
+
+        $config = UConfigModel::where('key', $key)->first();
+        if ($config) {
+            try {
+                $config->delete();
+                $this->saveAudit($config, 'deleted', null);
+                Log::info("Configuration deleted: $key");
+            } catch (\Exception $e) {
+                Log::error("Error deleting configuration $key: " . $e->getMessage());
+            }
+        }
+
+        // Update cache
+        Cache::put(self::CACHE_KEY, $this->config, 3600);
     }
 
     /**
-     * Recupera tutte le configurazioni.
+     * Retrieve all configurations.
      *
-     * @return array
+     * @return array All configuration values.
      */
     public function all(): array
     {
-        return $this->config;
+        return array_map(fn($config) => $config['value'], $this->config);
     }
-
-    private function isValidDatabaseTable(string $tableName): bool
-    {
-        try {
-            $pdo = $this->databaseConnection->getPDOInstance();
-            $result = $pdo->query("SHOW TABLES LIKE " . $pdo->quote($tableName));
-            return $result && $result->rowCount() > 0;
-        } catch (\PDOException $e) {
-            $this->logger->error("Errore durante la verifica della tabella: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    private function loadFromEnv(): void
-    {
-        // Recupera tutte le variabili d'ambiente caricate dall'EnvLoader
-        $envConfig = $this->envLoader->all();
-
-        // Unisce le configurazioni
-        $this->config = array_merge($this->config, $envConfig);
-    }
-} 
+}
