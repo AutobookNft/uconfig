@@ -12,7 +12,7 @@ use UltraProject\UConfig\Http\Middleware\CheckConfigManagerRole;
 use Carbon\Carbon;
 
 
-class UConfigServiceProvider extends ServiceProvider implements DeferrableProvider
+class UConfigServiceProvider extends ServiceProvider
 {
     /**
      * Registra i servizi nel contenitore.
@@ -72,23 +72,5 @@ class UConfigServiceProvider extends ServiceProvider implements DeferrableProvid
         $this->app['router']->aliasMiddleware('uconfig.check_role', CheckConfigManagerRole::class);
     }
 
-    /**
-     * Determina se il provider è "differibile".
-     *
-     * @return bool
-     */
-    public function isDeferred()
-    {
-        return true;
-    }
-
-    /**
-     * Ottieni i servizi forniti dal provider.
-     *
-     * @return array
-     */
-    public function provides()
-    {
-        return ['uconfig'];
-    }
+  
 } 

@@ -1,39 +1,44 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">Gestione Configurazioni</h1>
-    <a href="{{ route('vendor.uconfig.create') }}" class="mb-4 inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Aggiungi Configurazione</a>
-    <div class="overflow-x-auto">
-        <table class="min-w-full bg-white border border-gray-300">
-            <thead class="bg-gray-200">
-                <tr>
-                    <th class="py-2 px-4 border-b">Chiave</th>
-                    <th class="py-2 px-4 border-b">Categoria</th>
-                    <th class="py-2 px-4 border-b">Valore</th>
-                    <th class="py-2 px-4 border-b">Note</th>
-                    <th class="py-2 px-4 border-b">Azioni</th>
+@include('vendor.uconfig._internal_navbar')
+<div class="container mx-auto py-10">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-800">Gestione Configurazioni</h2>
+        <a href="{{ route('uconfig.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md">Aggiungi Configurazione</a>
+    </div>
+    <div class="overflow-hidden rounded-lg shadow-md">
+        <table class="min-w-full bg-white border-collapse">
+            <thead>
+                <tr class="bg-gradient-to-r from-gray-100 to-gray-200 text-left text-sm uppercase tracking-wider text-gray-600">
+                    <th class="py-4 px-6 border-b font-semibold">Chiave</th>
+                    <th class="py-4 px-6 border-b font-semibold">Valore Attuale</th>
+                    <th class="py-4 px-6 border-b font-semibold">Categoria</th>
+                    <th class="py-4 px-6 border-b font-semibold">Azioni</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($configs as $config)
-                    <tr class="border-b hover:bg-gray-100">
-                        <td class="py-2 px-4">{{ $config->key }}</td>
-                        <td class="py-2 px-4">{{ $config->category }}</td>
-                        <td class="py-2 px-4">{{ $config->value }}</td>
-                        <td class="py-2 px-4">{{ $config->note }}</td>
-                        <td class="py-2 px-4">
-                            <a href="{{ route('vendor.uconfig.edit', $config->id) }}" class="text-yellow-600 hover:underline">Modifica</a>
-                            <form action="{{ route('vendor.uconfig.destroy', $config->id) }}" method="POST" style="display:inline;">
+                @foreach($configs as $config)
+                <tr class="hover:bg-gray-50 transition duration-200">
+                    <td class="py-4 px-6 border-b text-gray-800">{{ $config->key }}</td>
+                    <td class="py-4 px-6 border-b text-gray-600">{{ $config->value }}</td>
+                    <td class="py-4 px-6 border-b text-gray-600">{{ $config->category }}</td>
+                    <td class="py-4 px-6 border-b">
+                        <div class="flex space-x-4">
+                            <a href="{{ route('uconfig.edit', $config->id) }}" class="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow">Modifica</a>
+                            <a href="{{ route('uconfig.audit', $config->id) }}" class="bg-yellow-500 hover:bg-yellow-700 text-white font-semibold py-2 px-4 rounded-md shadow">Visualizza Audit</a>
+                            <form action="{{ route('uconfig.destroy', $config->id) }}" method="POST">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:underline ml-2">Elimina</button>
+                                <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md shadow" onclick="return confirm('Sei sicuro di voler eliminare questa configurazione?')">Elimina</button>
                             </form>
-                        </td>
-                    </tr>
+                        </div>
+                    </td>
+                </tr>
                 @endforeach
             </tbody>
         </table>
     </div>
 </div>
+@include('vendor.uconfig.footer')
 @endsection

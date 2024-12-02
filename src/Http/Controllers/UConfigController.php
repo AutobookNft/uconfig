@@ -27,8 +27,10 @@ class UConfigController extends Controller
     {
         // Log::info('store: newValue: request:' . $request);
 
+        Log::info('store: newValue: request->key:' . $request->key);
+
         $data = $request->validate([
-            'key' => 'required|unique|string',
+            'key' => 'required|unique:uconfig,key',  // Specifica la tabella e la colonna per la verifica di unicità
             'value' => 'required',
             'category' => 'nullable|string',
             'note' => 'nullable|string',
@@ -89,7 +91,9 @@ class UConfigController extends Controller
     public function edit($id)
     {
         $config = UConfig::findOrFail($id);
-        return view('vendor.uconfig.edit', compact('config'));
+        $audits = UConfigAudit::where('uconfig_id', $id)->get();
+
+        return view('vendor.uconfig.edit', compact('config', 'audits'));
     }
 
     public function update(Request $request, $id, $userId = null)
@@ -165,4 +169,13 @@ class UConfigController extends Controller
 
         return redirect()->route('uconfig.index')->with('success', 'Configurazione eliminata con successo.');
     }
+
+    public function audit($id)
+    {
+        $config = UConfig::findOrFail($id);
+        $audits = UConfigAudit::where('uconfig_id', $id)->get();
+
+        return view('vendor.uconfig.audit', compact('config', 'audits'));
+    }
+    
 }
