@@ -9,9 +9,27 @@ use Illuminate\Support\Facades\Log;
 use UltraProject\UConfig\Models\UConfig;
 use UltraProject\UConfig\Models\UConfigVersion;
 use UltraProject\UConfig\Models\UConfigAudit;
+use UltraProject\UConfig\UConfig as UConfigService;
 
 class UConfigController extends Controller
 {
+    /**
+     * UConfig service instance.
+     *
+     * @var UConfigService
+     */
+    protected $uconfig;
+
+    /**
+     * Constructor.
+     *
+     * @param UConfigService $uconfig
+     */
+    public function __construct(UConfigService $uconfig)
+    {
+        $this->uconfig = $uconfig;
+    }
+
     public function index()
     {
         $configs = UConfig::all();
@@ -25,12 +43,10 @@ class UConfigController extends Controller
 
     public function store(Request $request, $userId = null)
     {
-        // Log::info('store: newValue: request:' . $request);
-
         Log::info('store: newValue: request->key:' . $request->key);
 
         $data = $request->validate([
-            'key' => 'required|unique:uconfig,key',  // Specifica la tabella e la colonna per la verifica di unicità
+            'key' => 'required|unique:uconfig,key',
             'value' => 'required',
             'category' => 'nullable|string',
             'note' => 'nullable|string',
@@ -38,49 +54,31 @@ class UConfigController extends Controller
 
         try {
             DB::transaction(function () use ($data, $userId) {
-
                 tap(UConfig::create($data), function ($config) use ($userId) {
-
-                    Log::info('store: newValue: config->id:' . $config->id);
-
-                    // Assicurati che $config sia stato creato correttamente
                     if (!$config || !$config->id) {
-                        log::error('Errore nella creazione di UConfig');
+                        Log::error('Errore nella creazione di UConfig');
                         throw new \Exception('Errore nella creazione di UConfig');
                     }
 
-                    // Creazione della versione di configurazione
-                    try {
-                        UConfigVersion::create([
-                            'uconfig_id' => $config->id,
-                            'version' => 1, // La prima versione
-                            'key' => $config->key,
-                            'category' => $config->category,
-                            'note' => $config->note,
-                            'value' => $config->value,
-                        ]);
-                    } catch (\Exception $e) {
-                        log::error('Errore nella creazione di UConfigVersion: ' . $e->getMessage());
-                        throw new \Exception('Errore nella creazione di UConfigVersion: ' . $e->getMessage());
-                    }
+                    UConfigVersion::create([
+                        'uconfig_id' => $config->id,
+                        'version' => 1,
+                        'key' => $config->key,
+                        'category' => $config->category,
+                        'note' => $config->note,
+                        'value' => $config->value,
+                    ]);
 
-
-                    // Creazione dell'audit per la configurazione
-                    try {
-                        UConfigAudit::create([
-                            'uconfig_id' => $config->id,
-                            'action' => 'created',
-                            'new_value' => $config->value,
-                            'user_id' => $userId,
-                        ]);
-                    } catch (\Exception $e) {
-                        log::error('Errore nella creazione di UConfigAudit: ' . $e->getMessage());
-                        throw new \Exception('Errore nella creazione di UConfigAudit: ' . $e->getMessage());
-                    }
-
+                    UConfigAudit::create([
+                        'uconfig_id' => $config->id,
+                        'action' => 'created',
+                        'new_value' => $config->value,
+                        'user_id' => $userId,
+                    ]);
                 });
             });
 
+            $this->uconfig->refreshConfigCache();
 
             return redirect()->route('uconfig.index')->with('success', 'Configurazione aggiunta con successo.');
         } catch (\Exception $e) {
@@ -112,14 +110,11 @@ class UConfigController extends Controller
         Log::info('oldValue: ' . $oldValue);
         Log::info('newValue: ' . $data['value']);
 
-        // Gestione degli errori con try-catch
         try {
             DB::transaction(function () use ($config, $data, $oldValue, $userId) {
                 tap($config, function ($config) use ($data, $oldValue, $userId) {
-                    // Aggiornamento della configurazione
                     $config->update($data);
 
-                    // Crea una nuova versione della configurazione
                     $latestVersion = UConfigVersion::where('uconfig_id', $config->id)->max('version');
                     UConfigVersion::create([
                         'uconfig_id' => $config->id,
@@ -130,7 +125,6 @@ class UConfigController extends Controller
                         'value' => $config->value,
                     ]);
 
-                    // Registra l'audit
                     UConfigAudit::create([
                         'uconfig_id' => $config->id,
                         'action' => 'updated',
@@ -141,14 +135,12 @@ class UConfigController extends Controller
                 });
             });
 
+            $this->uconfig->refreshConfigCache();
+
             return redirect()->route('uconfig.index')->with('success', 'Configurazione aggiornata con successo.');
-
         } catch (\Exception $e) {
-            // Log dell'errore per il debugging
             Log::error('Errore durante l\'aggiornamento della configurazione: ' . $e->getMessage());
-
-            // Redirige con un messaggio di errore
-            return redirect()->route('uconfig.index')->with('error', 'Errore durante l\'aggiornamento della configurazione. Si prega di riprovare.');
+            return redirect()->route('uconfig.index')->with('error', 'Errore durante l\'aggiornamento della configurazione.');
         }
     }
 
@@ -157,7 +149,6 @@ class UConfigController extends Controller
         $config = UConfig::findOrFail($id);
         $oldValue = $config->value;
 
-        // Registra l'audit
         UConfigAudit::create([
             'uconfig_id' => $config->id,
             'action' => 'deleted',
@@ -166,6 +157,8 @@ class UConfigController extends Controller
         ]);
 
         $config->delete();
+
+        $this->uconfig->refreshConfigCache();
 
         return redirect()->route('uconfig.index')->with('success', 'Configurazione eliminata con successo.');
     }
@@ -177,5 +170,4 @@ class UConfigController extends Controller
 
         return view('vendor.uconfig.audit', compact('config', 'audits'));
     }
-    
 }

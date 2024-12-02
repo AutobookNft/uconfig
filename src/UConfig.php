@@ -3,7 +3,6 @@
 namespace UltraProject\UConfig;
 
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use UltraProject\UConfig\Models\UConfig as UConfigModel;
@@ -52,15 +51,27 @@ class UConfig
      */
     public function loadConfig(): void
     {
+
+        Log::info('UConfig loadConfig');
+
+        // Check if cache is enabled
+        $use_cache = config('uconfig.cache.enabled');
+
         // Attempt to load from cache
-        $this->config = Cache::remember(self::CACHE_KEY, 3600, function () {
-            return $this->loadFromDatabase();
-        });
+        if ($use_cache) {
+            $ttl= config('uconfig.cache.ttl');
+            $this->config = Cache::remember(self::CACHE_KEY, $ttl, function () {
+                $this->loadFromDatabase();
+                $this->loadFromEnv();
+            });
+            Log::info('Cache enabled');
+        } else {
+            Log::info('Cache disabled');
+            $this->loadFromDatabase();
+            $this->loadFromEnv();
+        }
 
-        // Merge with .env variables
-        $this->loadFromEnv();
-
-        // Log::info('Configurations successfully loaded into memory.');
+        return;
     }
 
     /**
@@ -116,7 +127,15 @@ class UConfig
      */
     public function get(string $key, mixed $default = null): mixed
     {
+
+        // Se la cache non è sincronizzata, ricarica in memoria
+        if (empty($this->config)) {
+            $this->config = Cache::get(self::CACHE_KEY, []);
+        }
+
+        // Log::info("get key: $key" . json_encode($this->config));
         return $this->config[$key]['value'] ?? $default;
+
     }
 
     /**
@@ -143,7 +162,8 @@ class UConfig
         }
 
         // Update cache
-        Cache::put(self::CACHE_KEY, $this->config, 3600);
+        $this->refreshConfigCache();
+
     }
 
     /**
@@ -157,11 +177,29 @@ class UConfig
     private function saveToDatabase(string $key, mixed $value, ?string $category): ?UConfigModel
     {
         try {
-            // Salvataggio diretto; il cast si occuperà della crittografia
-            $config = UConfigModel::updateOrCreate(
-                ['key' => $key],
-                ['value' => $value, 'category' => $category]
-            );
+            // Verifica se il record esiste, inclusi quelli eliminati
+            $config = UConfigModel::withTrashed()->where('key', $key)->first();
+
+            if ($config) {
+                // Se il record è eliminato, lo ripristina
+                if ($config->trashed()) {
+                    $config->restore();
+                }
+
+                // Aggiorna i dati del record
+                $config->update([
+                    'value' => $value,
+                    'category' => $category,
+                ]);
+            } else {
+                // Se il record non esiste, lo crea
+                $config = UConfigModel::create([
+                    'key' => $key,
+                    'value' => $value,
+                    'category' => $category,
+                ]);
+            }
+
             Log::info("Configuration saved to database: $key");
             return $config;
         } catch (\Exception $e) {
@@ -191,7 +229,7 @@ class UConfig
                 'value' => $value, // Passaggio diretto; crittografia gestita dal cast
             ]);
 
-            Log::info("Version registered for configuration: {$config->key}");
+            // Log::info("Version registered for configuration: {$config->key}");
         } catch (\Exception $e) {
             Log::error("Error registering version for configuration {$config->key}: " . $e->getMessage());
         }
@@ -210,7 +248,7 @@ class UConfig
         try {
             // Recupera il valore precedente
             $oldValue = $this->get($config->key);
-    
+
             // Salvataggio diretto; il cast nel modello si occuperà della crittografia
             UConfigAudit::create([
                 'uconfig_id' => $config->id,
@@ -219,13 +257,13 @@ class UConfig
                 'old_value' => $oldValue, // Critografia gestita dal cast
                 'user_id' => Auth::id(),
             ]);
-    
-            Log::info("Audit registered for action $action on configuration: {$config->key}");
+
+            // Log::info("Audit registered for action $action on configuration: {$config->key}");
         } catch (\Exception $e) {
             Log::error("Error registering audit for configuration {$config->key}: " . $e->getMessage());
         }
     }
-    
+
     /**
      * Delete a configuration from memory and database.
      *
@@ -234,6 +272,7 @@ class UConfig
     public function delete(string $key): void
     {
         unset($this->config[$key]);
+        Log::info("get key: $key" . json_encode($this->config));
 
         $config = UConfigModel::where('key', $key)->first();
         if ($config) {
@@ -247,7 +286,7 @@ class UConfig
         }
 
         // Update cache
-        Cache::put(self::CACHE_KEY, $this->config, 3600);
+        $this->refreshConfigCache();
     }
 
     /**
@@ -259,4 +298,23 @@ class UConfig
     {
         return array_map(fn($config) => $config['value'], $this->config);
     }
+
+    /**
+     * Update the cache with the current in-memory configurations.
+     */
+    public function refreshConfigCache(): void
+    {
+        try {
+            // Ricarica tutte le configurazioni dal database
+            $this->config = $this->loadFromDatabase();
+
+            // Aggiorna la cache con i dati attuali
+            Cache::put(self::CACHE_KEY, $this->config, 3600);
+
+            Log::info('Cache refreshed successfully.');
+        } catch (\Exception $e) {
+            Log::error('Error refreshing the cache: ' . $e->getMessage());
+        }
+    }
+
 }
