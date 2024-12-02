@@ -75,23 +75,23 @@ class UConfig
 
         foreach ($configs as $config) {
             try {
-                // Ensure the value is not null before decrypting
+                // Assicurati che il valore non sia nullo
                 if ($config->value !== null) {
-                    $decryptedValue = Crypt::decryptString($config->value);
                     $configArray[$config->key] = [
-                        'value' => $decryptedValue,
+                        'value' => $config->value, // Decrittografia gestita dal cast
                         'category' => $config->category,
                     ];
                 } else {
                     Log::warning("Configuration with key {$config->key} has a null value and will be ignored.");
                 }
             } catch (\Exception $e) {
-                Log::error("Error decrypting value for key {$config->key}: " . $e->getMessage());
+                Log::error("Error processing configuration with key {$config->key}: " . $e->getMessage());
             }
         }
 
         return $configArray;
     }
+
 
     /**
      * Load configurations from the .env file and merge them with existing configurations.
@@ -157,10 +157,10 @@ class UConfig
     private function saveToDatabase(string $key, mixed $value, ?string $category): ?UConfigModel
     {
         try {
-            $encryptedValue = Crypt::encryptString(is_scalar($value) ? $value : json_encode($value));
+            // Salvataggio diretto; il cast si occuperà della crittografia
             $config = UConfigModel::updateOrCreate(
                 ['key' => $key],
-                ['value' => $encryptedValue, 'category' => $category]
+                ['value' => $value, 'category' => $category]
             );
             Log::info("Configuration saved to database: $key");
             return $config;
@@ -179,15 +179,16 @@ class UConfig
     private function saveVersion(UConfigModel $config, mixed $value): void
     {
         try {
+            // Recupera l'ultima versione registrata o usa 0 come default
             $latestVersion = UConfigVersion::where('uconfig_id', $config->id)->max('version') ?? 0;
-            $encryptedValue = Crypt::encryptString(is_scalar($value) ? $value : json_encode($value));
 
+            // Salvataggio diretto; il cast si occuperà della crittografia
             UConfigVersion::create([
                 'uconfig_id' => $config->id,
                 'version' => $latestVersion + 1,
                 'key' => $config->key,
                 'category' => $config->category,
-                'value' => $encryptedValue,
+                'value' => $value, // Passaggio diretto; crittografia gestita dal cast
             ]);
 
             Log::info("Version registered for configuration: {$config->key}");
@@ -195,6 +196,7 @@ class UConfig
             Log::error("Error registering version for configuration {$config->key}: " . $e->getMessage());
         }
     }
+
 
     /**
      * Save an audit log for a configuration.
@@ -206,24 +208,24 @@ class UConfig
     private function saveAudit(UConfigModel $config, string $action, mixed $newValue): void
     {
         try {
+            // Recupera il valore precedente
             $oldValue = $this->get($config->key);
-            $encryptedNewValue = Crypt::encryptString(is_scalar($newValue) ? $newValue : json_encode($newValue));
-            $encryptedOldValue = $oldValue ? Crypt::encryptString($oldValue) : null;
-
+    
+            // Salvataggio diretto; il cast nel modello si occuperà della crittografia
             UConfigAudit::create([
                 'uconfig_id' => $config->id,
                 'action' => $action,
-                'new_value' => $encryptedNewValue,
-                'old_value' => $encryptedOldValue,
+                'new_value' => $newValue, // Critografia gestita dal cast
+                'old_value' => $oldValue, // Critografia gestita dal cast
                 'user_id' => Auth::id(),
             ]);
-
+    
             Log::info("Audit registered for action $action on configuration: {$config->key}");
         } catch (\Exception $e) {
             Log::error("Error registering audit for configuration {$config->key}: " . $e->getMessage());
         }
     }
-
+    
     /**
      * Delete a configuration from memory and database.
      *
