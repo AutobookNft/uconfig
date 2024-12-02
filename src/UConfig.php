@@ -60,7 +60,7 @@ class UConfig
         // Merge with .env variables
         $this->loadFromEnv();
 
-        Log::info('Configurations successfully loaded into memory.');
+        // Log::info('Configurations successfully loaded into memory.');
     }
 
     /**
