@@ -21,6 +21,9 @@
             "aliases": {
                 "UConfig": "UltraProject\\UConfig\\Facades\\UConfig"
             }
+        },
+        "branch-alias": {
+            "dev-feature/upm-module": "1.0.x-dev"
         }
     },
     "authors": [
