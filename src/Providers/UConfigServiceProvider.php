@@ -7,7 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use UltraProject\UConfig\UConfig;
 use UltraProject\UConfig\EnvLoader;
 use UltraProject\UConfig\Facades\UConfig as FacadesUConfig;
-use UltraProject\UConfig\Http\Middleware\CheckConfigManagerRole;
+use UltraProject\UConfig\Middleware\CheckConfigManagerRole;
 
 
 class UConfigServiceProvider extends ServiceProvider

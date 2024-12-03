@@ -171,3 +171,4 @@ class UConfigController extends Controller
         return view('vendor.uconfig.audit', compact('config', 'audits'));
     }
 }
+    
