@@ -1,11 +1,11 @@
 <?php
 
-namespace UCM\Permissions;
+namespace UltraProject\UConfig\Permissions;
 
-use UCM\Permissions\Contracts\PermissionAdapterContract;
-use UCM\Permissions\Adapters\JetstreamPermissionAdapter;
-use UCM\Permissions\Adapters\SpatiePermissionAdapter;
-use UCM\Permissions\Adapters\GatePolicyPermissionAdapter;
+use UltraProject\UConfig\Permissions\Contracts\PermissionAdapterContract;
+use UltraProject\UConfig\Permissions\Adapters\JetstreamPermissionAdapter;
+use UltraProject\UConfig\Permissions\Adapters\SpatiePermissionAdapter;
+use UltraProject\UConfig\Permissions\Adapters\GatePolicyPermissionAdapter;
 
 class PermissionManager
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace UCM\Permissions\Contracts;
+namespace UltraProject\UConfig\Permissions\Contracts;
 
 interface PermissionAdapterContract
 {

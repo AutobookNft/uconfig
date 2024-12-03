@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 use UltraProject\UConfig\Models\UConfig as UConfigModel;
 use UltraProject\UConfig\Models\UConfigVersion;
 use UltraProject\UConfig\Models\UConfigAudit;
-use UCM\Permissions\PermissionManager;
+use UltraProject\UConfig\Permissions\PermissionManager;
 
 /**
  * UConfig - Centralized configuration management class.

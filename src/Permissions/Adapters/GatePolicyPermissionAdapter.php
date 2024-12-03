@@ -1,8 +1,8 @@
 <?php
 
-namespace UCM\Permissions\Adapters;
+namespace UltraProject\UConfig\Permissions\Adapters;
 
-use UCM\Permissions\Contracts\PermissionAdapterContract;
+use UltraProject\UConfig\Permissions\Contracts\PermissionAdapterContract;
 use Illuminate\Support\Facades\Gate;
 
 
