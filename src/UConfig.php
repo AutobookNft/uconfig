@@ -8,12 +8,19 @@ use Illuminate\Support\Facades\Log;
 use UltraProject\UConfig\Models\UConfig as UConfigModel;
 use UltraProject\UConfig\Models\UConfigVersion;
 use UltraProject\UConfig\Models\UConfigAudit;
+use UCM\Permissions\PermissionManager;
 
 /**
  * UConfig - Centralized configuration management class.
  */
 class UConfig
 {
+    /**
+     * Summary of permissionManager
+     * @var 
+     */
+    protected static ?PermissionManager $permissionManager = null;
+
     /**
      * In-memory configuration array.
      *
@@ -44,7 +51,13 @@ class UConfig
     {
         $this->envLoader = $envLoader;
         $this->loadConfig(); // Load configuration on initialization
+        $this->permissionManager = new PermissionManager();
     }
+
+    public function permissions(): PermissionManager
+    {
+        return $this->permissionManager;
+    }  
 
     /**
      * Load all configurations into memory from cache, database, and .env file.
@@ -125,9 +138,14 @@ class UConfig
      * @param mixed $default Default value if key does not exist.
      * @return mixed Configuration value.
      */
-    public function get(string $key, mixed $default = null): mixed
+    public function get(string $key, mixed $default = null, $user = null): mixed
     {
 
+        // Controlla i permessi prima di leggere i dati
+        if ($user && !$this->permissions()->can($user, 'read-config')) {
+            throw new \Exception("Accesso negato: l'utente non ha i permessi per leggere la configurazione.");
+        }
+            
         // Se la cache non è sincronizzata, ricarica in memoria
         if (empty($this->config)) {
             $this->config = Cache::get(self::CACHE_KEY, []);
@@ -145,8 +163,14 @@ class UConfig
      * @param mixed $value Configuration value.
      * @param string|null $category Configuration category (optional).
      */
-    public function set(string $key, mixed $value, ?string $category = null): void
+    public function set(string $key, mixed $value, ?string $category = null, $user = null): void
     {
+        
+        // Controlla i permessi prima di modificare i dati
+        if ($user && !$this->permissions()->can($user, 'set-config')) {
+            throw new \Exception("Accesso negato: l'utente non ha i permessi per modificare la configurazione.");
+        }
+        
         // Update in-memory configuration
         $this->config[$key] = [
             'value' => $value,
@@ -269,8 +293,13 @@ class UConfig
      *
      * @param string $key Configuration key.
      */
-    public function delete(string $key): void
+    public function delete(string $key, $user = null): void
     {
+        
+        if ($user && !$this->permissions()->can($user, 'delete-config')) {
+            throw new \Exception("Accesso negato: l'utente non ha i permessi per eliminare la configurazione.");
+        }
+        
         unset($this->config[$key]);
         Log::info("get key: $key" . json_encode($this->config));
 

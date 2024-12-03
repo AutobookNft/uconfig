@@ -58,9 +58,7 @@ class UConfigServiceProvider extends ServiceProvider
         } else {
             $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         }
-
-        // Registra il middleware
-        $this->app['router']->aliasMiddleware('uconfig.check_role', CheckConfigManagerRole::class);
+       
     }
 
     /**

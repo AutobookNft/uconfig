@@ -11,6 +11,7 @@ use UltraProject\UConfig\Models\UConfigVersion;
 use UltraProject\UConfig\Models\UConfigAudit;
 use UltraProject\UConfig\UConfig as UConfigService;
 
+
 class UConfigController extends Controller
 {
     /**

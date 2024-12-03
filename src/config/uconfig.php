@@ -18,21 +18,29 @@ return [
         'ttl' => 3600  // tempo in secondi
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Utilizzo di Spatie Laravel Permission
-    |--------------------------------------------------------------------------
-    |
-    | Se impostato a true, il pacchetto utilizzerà Spatie Laravel Permission
-    | per gestire ruoli e permessi. Assicurati che il pacchetto sia installato
-    | e configurato correttamente nella tua applicazione.
-    |
-    | Se impostato a false, verrà utilizzato il middleware personalizzato che
-    | verifica il ruolo dell'utente in base a una logica personalizzata.
-    |
-    */
+    /**
+     * Configurazione: roles_permissions
+     * 
+     * Questa configurazione definisce il driver di gestione dei permessi da utilizzare
+     * all'interno di UCM (UltraConfigManager).
+     * 
+     * 'driver' => Specifica il sistema di gestione dei permessi scelto. I valori possibili sono:
+     *   - 'jetstream': Usa il sistema di gestione dei permessi integrato in Jetstream, basato sui team.
+     *   - 'spatie': Usa la libreria Spatie Permission per una gestione avanzata di ruoli e permessi.
+     *   - 'gates': Usa i Gate e le Policy nativi di Laravel per un controllo personalizzato.
+     *   - 'none': Nessun sistema di permessi viene utilizzato. UCM funzionerà senza restrizioni 
+     *             basate su ruoli o permessi.
+     * 
+     * Scopo:
+     * - Consentire a UCM di adattarsi dinamicamente al sistema di permessi configurato
+     *   nell'applicazione ospitante.
+     * 
+     * Nota:
+     * - Il valore predefinito è 'jetstream'. Se 'none' viene selezionato, UCM ignora
+     *   ogni controllo relativo ai permessi e ruoli.
+     */
 
-    'use_spatie_permissions' => true,
+    'roles_permissions' => [
+        'driver' => env('ROLE_MANAGER_DRIVER', 'jetstream'), // Possibili valori: jetstream, spatie, gates
+    ],
 ];  
-
-]; 
