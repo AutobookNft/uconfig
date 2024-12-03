@@ -19,7 +19,7 @@ class UConfig
      * Summary of permissionManager
      * @var 
      */
-    protected static ?PermissionManager $permissionManager = null;
+    protected ?PermissionManager $permissionManager = null;
 
     /**
      * In-memory configuration array.
