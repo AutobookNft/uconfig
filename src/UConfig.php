@@ -5,6 +5,7 @@ namespace UltraProject\UConfig;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use UltraProject\UConfig\Constants\GlobalConstants;
 use UltraProject\UConfig\Models\UConfig as UConfigModel;
 use UltraProject\UConfig\Models\UConfigVersion;
@@ -145,9 +146,15 @@ class UConfig
      * @param mixed $default Default value if key does not exist.
      * @return mixed Configuration value.
      */
-    public function get(string $key, mixed $default = null, $user = null): mixed
+    public function get(string $key, mixed $default = null): mixed
     {
 
+         // Controlla se la tabella esiste
+        if (!Schema::hasTable('uconfig')) {
+            // Restituisce il valore predefinito se la tabella non esiste
+            Log::warning("The 'uconfig' table does not exist. Returning default value for key: {$key}");
+            return $default;
+        }
         // Se la cache non è sincronizzata, ricarica in memoria
         if (empty($this->config)) {
             $this->config = Cache::get(self::CACHE_KEY, []);
