@@ -109,7 +109,7 @@ class UConfig
         // Controlla se la tabella esiste
         if (!Schema::hasTable('uconfig')) {
             // Restituisce il valore predefinito se la tabella non esiste
-            Log::warning("The 'uconfig' table does not exist. Returning default value for key: {$key}");
+            Log::warning("The 'uconfig' table does not exist. ");
             return $configArray;
         } else{
             Log::info("The 'uconfig' table exists.");
@@ -170,7 +170,7 @@ class UConfig
         // Controlla se la tabella esiste
         if (!Schema::hasTable('uconfig')) {
             // Restituisce il valore predefinito se la tabella non esiste
-            Log::warning("The 'uconfig' table does not exist. Returning default value for key: {$key}");
+            Log::warning("The 'uconfig' table does not exist. Returning default value for default: {$default}");
             return $default;
         } else{
             Log::info("The 'uconfig' table exists.");

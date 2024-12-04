@@ -6,6 +6,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use UltraProject\UConfig\Constants\GlobalConstants;
 use UltraProject\UConfig\Models\UConfig;
 use UltraProject\UConfig\Models\UConfigVersion;
@@ -39,6 +40,16 @@ class UConfigController extends Controller
 
     public function index()
     {
+        
+        // Controlla se la tabella esiste
+        if (!Schema::hasTable('uconfig')) {
+            // Restituisce il valore predefinito se la tabella non esiste
+            Log::warning("The 'uconfig' table does not exist. ");
+            return 'The "uconfig" table does not exist.';
+        } else{
+            Log::info("The 'uconfig' table exists.");
+        }
+        
         $configs = UConfig::all();
         return view('vendor.uconfig.index', compact('configs'));
     }
