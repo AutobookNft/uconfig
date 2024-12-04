@@ -146,4 +146,3 @@ class UConfigServiceProvider extends ServiceProvider
     }
 
 }
-    
