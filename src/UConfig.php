@@ -110,10 +110,18 @@ class UConfig
             // Restituisce il valore predefinito se la tabella non esiste
             Log::warning("The 'uconfig' table does not exist. Returning default value for key: {$key}");
             return $configArray;
+        } else{
+            Log::info("The 'uconfig' table exists.");
         }
         
-        $configs = UConfigModel::all();
-
+        try{
+            // Recupera tutte le configurazioni
+            $configs = UConfigModel::all();
+        } catch (\Exception $e) {
+            Log::error("Error loading configurations from database: " . $e->getMessage());
+            return $configArray;
+        }
+        
         foreach ($configs as $config) {
             try {
                 // Assicurati che il valore non sia nullo
