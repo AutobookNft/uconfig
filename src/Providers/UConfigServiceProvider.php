@@ -140,6 +140,10 @@ class UConfigServiceProvider extends ServiceProvider
             // Pubblica il file di alias
             __DIR__.'/../config/aliases.php' => base_path('bootstrap/aliases.php'),
         ], 'uconfig-resources'); // Usa un unico tag per tutte le risorse
+        $this->publishes([
+            __DIR__ . '/../database/seeders/UConfigPermissionsSeeder.php' => database_path('seeders/UConfigPermissionsSeeder.php'),
+        ], 'uconfig-seeders');
     }
 
 }
+    

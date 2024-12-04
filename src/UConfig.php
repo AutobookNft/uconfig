@@ -148,11 +148,6 @@ class UConfig
     public function get(string $key, mixed $default = null, $user = null): mixed
     {
 
-        // Controlla i permessi prima di leggere i dati
-        if ($user && !$this->permissions()->can($user, 'read-config')) {
-            throw new \Exception("Accesso negato: l'utente non ha i permessi per leggere la configurazione.");
-        }
-            
         // Se la cache non è sincronizzata, ricarica in memoria
         if (empty($this->config)) {
             $this->config = Cache::get(self::CACHE_KEY, []);
@@ -170,13 +165,14 @@ class UConfig
      * @param mixed $value Configuration value.
      * @param string|null $category Configuration category (optional).
      */
-    public function set(string $key, mixed $value, ?string $category = null, $user = null): void
+    public function set(
+        string $key, 
+        mixed $value, 
+        ?string $category = null, 
+        ?object $user = null, 
+        bool $version = true, 
+        bool $audit = true): void
     {
-        
-        // Controlla i permessi prima di modificare i dati
-        if ($user && !$this->permissions()->can($user, 'set-config')) {
-            throw new \Exception("Accesso negato: l'utente non ha i permessi per modificare la configurazione.");
-        }
         
         // Update in-memory configuration
         $this->config[$key] = [
@@ -187,9 +183,14 @@ class UConfig
         // Save to database
         $config = $this->saveToUConfig($key, $value, $category);
 
+        // Salva versione e audit log solo se abilitati
         if ($config) {
-            $this->saveVersion($config, $value);
-            $this->saveAudit($config, 'updated', $value);
+            if ($version) {
+                $this->saveVersion($config, $value);
+            }
+            if ($audit) {
+                $this->saveAudit($config, 'updated', $value);
+            }
         }
 
         // Update cache
@@ -311,30 +312,32 @@ class UConfig
      *
      * @param string $key Configuration key.
      */
-    public function delete(string $key, $user = null): void
+    public function delete(string $key, bool $version = true, bool $audit = true): void
     {
-        
-        if ($user && !$this->permissions()->can($user, 'delete-config')) {
-            throw new \Exception("Accesso negato: l'utente non ha i permessi per eliminare la configurazione.");
-        }
-        
+        // Rimuove il valore dalla configurazione in memoria
         unset($this->config[$key]);
-        Log::info("get key: $key" . json_encode($this->config));
 
+        // Cerca la configurazione nel database
         $config = UConfigModel::where('key', $key)->first();
+
         if ($config) {
             try {
-                $config->delete();
-                $this->saveAudit($config, 'deleted', null);
-                Log::info("Configuration deleted: $key");
+                $config->delete(); // Soft delete
+                if ($version) {
+                    $this->saveVersion($config, null);
+                }
+                if ($audit) {
+                    $this->saveAudit($config, 'deleted', null);
+                }
             } catch (\Exception $e) {
-                Log::error("Error deleting configuration $key: " . $e->getMessage());
+                Log::error("Errore durante la cancellazione della configurazione $key: " . $e->getMessage());
             }
         }
 
-        // Update cache
+        // Aggiorna la cache
         $this->refreshConfigCache();
     }
+
 
     /**
      * Retrieve all configurations.
