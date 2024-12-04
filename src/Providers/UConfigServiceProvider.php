@@ -32,7 +32,8 @@ class UConfigServiceProvider extends ServiceProvider
             );
         });
 
-        
+        // Alias per supportare la Facade
+        $this->app->alias(UConfig::class, 'uconfig');
 
     }
 
