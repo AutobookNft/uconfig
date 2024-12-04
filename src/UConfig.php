@@ -59,6 +59,7 @@ class UConfig
         $this->permissionManager = new PermissionManager();
         $this->globalConstants = $globalConstants;
         $this->versionManager = $versionManager;
+        Log::info('UConfig constructor');
         
     }
 
@@ -171,7 +172,10 @@ class UConfig
             // Restituisce il valore predefinito se la tabella non esiste
             Log::warning("The 'uconfig' table does not exist. Returning default value for key: {$key}");
             return $default;
+        } else{
+            Log::info("The 'uconfig' table exists.");
         }
+        
         // Se la cache non è sincronizzata, ricarica in memoria
         if (empty($this->config)) {
             $this->config = Cache::get(self::CACHE_KEY, []);

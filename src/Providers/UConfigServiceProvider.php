@@ -57,7 +57,7 @@ class UConfigServiceProvider extends ServiceProvider
         // Esegue le seguenti azioni solo se l'applicazione è in esecuzione da riga di comando
         if (app()->runningInConsole()) {
 
-            $this->handleInitialPublicationMessage();
+            // $this->handleInitialPublicationMessage();
 
             $this->publishTheFilea();
         }
