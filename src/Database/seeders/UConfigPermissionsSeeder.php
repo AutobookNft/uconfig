@@ -1,6 +1,6 @@
 <?php
 
-namespace UltraProject\UConfig\Database\Seeders;
+namespace UltraProject\UConfig\Databases\seeders;
 
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
