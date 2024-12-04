@@ -7,7 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use UltraProject\UConfig\UConfig;
 use UltraProject\UConfig\EnvLoader;
 use UltraProject\UConfig\Facades\UConfig as FacadesUConfig;
-use UltraProject\UConfig\Middleware\CheckConfigManagerRole;
+use UltraProject\UConfig\Constants\GlobalConstants;
 
 
 class UConfigServiceProvider extends ServiceProvider
@@ -19,9 +19,14 @@ class UConfigServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        
         $this->app->singleton('uconfig', function ($app) {
             $envLoader = new EnvLoader();
             return new UConfig($envLoader);
+        });
+
+        $this->app->singleton('global_constants', function ($app) {
+            return new GlobalConstants();
         });
 
     }

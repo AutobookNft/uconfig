@@ -6,6 +6,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use UltraProject\UConfig\Constants\GlobalConstants;
 use UltraProject\UConfig\Models\UConfig;
 use UltraProject\UConfig\Models\UConfigVersion;
 use UltraProject\UConfig\Models\UConfigAudit;
@@ -19,16 +20,18 @@ class UConfigController extends Controller
      *
      * @var UConfigService
      */
-    protected $uconfig;
+    protected UConfigService $uconfig;
+    protected GlobalConstants $globalConstants;
 
     /**
      * Constructor.
      *
      * @param UConfigService $uconfig
      */
-    public function __construct(UConfigService $uconfig)
+    public function __construct(UConfigService $uconfig, GlobalConstants $globalConstants)
     {
         $this->uconfig = $uconfig;
+        $this->globalConstants = $globalConstants;
     }
 
     public function index()
@@ -42,8 +45,17 @@ class UConfigController extends Controller
         return view('vendor.uconfig.create');
     }
 
-    public function store(Request $request, $userId = null)
+    public function store(Request $request)
     {
+
+        $user = $request->user();
+        
+        
+         // Controllo permesso per creare una configurazione
+        if ($user && !UConfig::permissions()->can($user, 'create-config')) {
+            abort(403, "Accesso negato: l'utente non ha i permessi per creare configurazioni.");
+        }
+        
         Log::info('store: newValue: request->key:' . $request->key);
 
         $data = $request->validate([
@@ -54,8 +66,8 @@ class UConfigController extends Controller
         ]);
 
         try {
-            DB::transaction(function () use ($data, $userId) {
-                tap(UConfig::create($data), function ($config) use ($userId) {
+            DB::transaction(function () use ($data, $user) {
+                tap(UConfig::create($data), function ($config) use ($user) {
                     if (!$config || !$config->id) {
                         Log::error('Errore nella creazione di UConfig');
                         throw new \Exception('Errore nella creazione di UConfig');
@@ -74,7 +86,7 @@ class UConfigController extends Controller
                         'uconfig_id' => $config->id,
                         'action' => 'created',
                         'new_value' => $config->value,
-                        'user_id' => $userId,
+                        'user_id' => $user?->id ?? $this->globalConstants::NO_USER, // NO_USER se $user è null
                     ]);
                 });
             });
@@ -95,8 +107,17 @@ class UConfigController extends Controller
         return view('vendor.uconfig.edit', compact('config', 'audits'));
     }
 
-    public function update(Request $request, $id, $userId = null)
+    public function update(Request $request, $id, )
     {
+
+        $user = $request->user();
+        
+        // Controllo permesso per aggiornare una configurazione
+        if ($user && !UConfig::permissions()->can($user, 'update-config')) {
+            abort(403, "Accesso negato: l'utente non ha i permessi per aggiornare configurazioni.");
+        }
+        
+        
         $config = UConfig::findOrFail($id);
 
         $data = $request->validate([
@@ -112,8 +133,8 @@ class UConfigController extends Controller
         Log::info('newValue: ' . $data['value']);
 
         try {
-            DB::transaction(function () use ($config, $data, $oldValue, $userId) {
-                tap($config, function ($config) use ($data, $oldValue, $userId) {
+            DB::transaction(function () use ($config, $data, $oldValue, $user) {
+                tap($config, function ($config) use ($data, $oldValue, $user) {
                     $config->update($data);
 
                     $latestVersion = UConfigVersion::where('uconfig_id', $config->id)->max('version');
@@ -131,7 +152,7 @@ class UConfigController extends Controller
                         'action' => 'updated',
                         'old_value' => $oldValue,
                         'new_value' => $config->value,
-                        'user_id' => $userId,
+                        'user_id' => $user?->id ?? $this->globalConstants::NO_USER, // NO_USER se $user è null
                     ]);
                 });
             });
@@ -145,8 +166,19 @@ class UConfigController extends Controller
         }
     }
 
-    public function destroy($id, $userId = null)
+    public function destroy(Request $request, $id)
     {
+                
+        $user = $request->user();
+
+        $userId = $user ? $user->id : 0 ; // 0 se non loggato
+
+        // Controllo permesso per eliminare una configurazione
+        if ($user && !UConfig::permissions()->can($user, 'delete-config')) {
+            abort(403, "Accesso negato: l'utente non ha i permessi per eliminare configurazioni.");
+        }
+        
+        
         $config = UConfig::findOrFail($id);
         $oldValue = $config->value;
 
