@@ -5,10 +5,12 @@ namespace UltraProject\UConfig;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use UltraProject\UConfig\Constants\GlobalConstants;
 use UltraProject\UConfig\Models\UConfig as UConfigModel;
 use UltraProject\UConfig\Models\UConfigVersion;
 use UltraProject\UConfig\Models\UConfigAudit;
 use UltraProject\UConfig\Permissions\PermissionManager;
+use UltraProject\UConfig\Services\VersionManager;
 
 /**
  * UConfig - Centralized configuration management class.
@@ -33,7 +35,9 @@ class UConfig
      *
      * @var EnvLoader
      */
-    private $envLoader;
+    protected EnvLoader $envLoader;
+    protected GlobalConstants $globalConstants;
+    protected VersionManager $versionManager;
 
     /**
      * Cache key used to store the configurations.
@@ -47,11 +51,14 @@ class UConfig
      *
      * @param EnvLoader $envLoader Instance to load environment variables.
      */
-    public function __construct(EnvLoader $envLoader)
+    public function __construct(EnvLoader $envLoader, GlobalConstants $globalConstants, VersionManager $versionManager)
     {
         $this->envLoader = $envLoader;
         $this->loadConfig(); // Load configuration on initialization
         $this->permissionManager = new PermissionManager();
+        $this->globalConstants = $globalConstants;
+        $this->versionManager = $versionManager;
+        
     }
 
     public function permissions(): PermissionManager
@@ -178,7 +185,7 @@ class UConfig
         ];
 
         // Save to database
-        $config = $this->saveToDatabase($key, $value, $category);
+        $config = $this->saveToUConfig($key, $value, $category);
 
         if ($config) {
             $this->saveVersion($config, $value);
@@ -198,24 +205,36 @@ class UConfig
      * @param string|null $category Configuration category.
      * @return UConfigModel|null Saved UConfigModel instance or null on failure.
      */
-    private function saveToDatabase(string $key, mixed $value, ?string $category): ?UConfigModel
+    private function saveToUConfig(string $key, mixed $value, ?string $category): ?UConfigModel
     {
         try {
             // Verifica se il record esiste, inclusi quelli eliminati
             $config = UConfigModel::withTrashed()->where('key', $key)->first();
 
             if ($config) {
-                // Se il record è eliminato, lo ripristina
+                
+                // Se il record è eliminato, lo ripristina. 
+                
+                /** 
+                 * I record non vengono eliminati fisicamente ma solo "soft deleted", 
+                 * per questo se si sta cercando di creare un record con la stessa chiave 
+                 * di un record eliminato, il record eliminato verrà ripristinato) 
+                 * */
+                
                 if ($config->trashed()) {
                     $config->restore();
                 }
+
+                // ---------------------------------------------
 
                 // Aggiorna i dati del record
                 $config->update([
                     'value' => $value,
                     'category' => $category,
                 ]);
+
             } else {
+               
                 // Se il record non esiste, lo crea
                 $config = UConfigModel::create([
                     'key' => $key,
@@ -241,13 +260,11 @@ class UConfig
     private function saveVersion(UConfigModel $config, mixed $value): void
     {
         try {
-            // Recupera l'ultima versione registrata o usa 0 come default
-            $latestVersion = UConfigVersion::where('uconfig_id', $config->id)->max('version') ?? 0;
-
+            
             // Salvataggio diretto; il cast si occuperà della crittografia
             UConfigVersion::create([
                 'uconfig_id' => $config->id,
-                'version' => $latestVersion + 1,
+                'version' => $this->versionManager->getNextVersion($config->id), // Incrementa di uno
                 'key' => $config->key,
                 'category' => $config->category,
                 'value' => $value, // Passaggio diretto; crittografia gestita dal cast
@@ -279,7 +296,8 @@ class UConfig
                 'action' => $action,
                 'new_value' => $newValue, // Critografia gestita dal cast
                 'old_value' => $oldValue, // Critografia gestita dal cast
-                'user_id' => Auth::id(),
+                'user_id' => Auth::id() ?? $this->globalConstants::NO_USER, // NO_USER se non loggato
+
             ]);
 
             // Log::info("Audit registered for action $action on configuration: {$config->key}");

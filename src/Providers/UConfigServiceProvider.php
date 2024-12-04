@@ -4,6 +4,7 @@ namespace UltraProject\UConfig\Providers;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
+use UltraProject\UConfig\Services\VersionManager;
 use UltraProject\UConfig\UConfig;
 use UltraProject\UConfig\EnvLoader;
 use UltraProject\UConfig\Facades\UConfig as FacadesUConfig;
@@ -20,14 +21,18 @@ class UConfigServiceProvider extends ServiceProvider
     public function register()
     {
         
-        $this->app->singleton('uconfig', function ($app) {
-            $envLoader = new EnvLoader();
-            return new UConfig($envLoader);
+        $this->app->singleton(GlobalConstants::class);
+        $this->app->singleton(VersionManager::class);
+                
+        $this->app->singleton(UConfig::class, function ($app) {
+            return new UConfig(
+                new EnvLoader(),
+                $app->make(GlobalConstants::class),
+                $app->make(VersionManager::class)
+            );
         });
 
-        $this->app->singleton('global_constants', function ($app) {
-            return new GlobalConstants();
-        });
+        
 
     }
 

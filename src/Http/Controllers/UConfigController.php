@@ -11,7 +11,7 @@ use UltraProject\UConfig\Models\UConfig;
 use UltraProject\UConfig\Models\UConfigVersion;
 use UltraProject\UConfig\Models\UConfigAudit;
 use UltraProject\UConfig\UConfig as UConfigService;
-
+use UltraProject\UConfig\Services\VersionManager;
 
 class UConfigController extends Controller
 {
@@ -22,16 +22,19 @@ class UConfigController extends Controller
      */
     protected UConfigService $uconfig;
     protected GlobalConstants $globalConstants;
+    protected VersionManager $versionManager;
+
 
     /**
      * Constructor.
      *
      * @param UConfigService $uconfig
      */
-    public function __construct(UConfigService $uconfig, GlobalConstants $globalConstants)
+    public function __construct(UConfigService $uconfig, GlobalConstants $globalConstants, VersionManager $versionManager)
     {
         $this->uconfig = $uconfig;
         $this->globalConstants = $globalConstants;
+        $this->versionManager = $versionManager;
     }
 
     public function index()
@@ -136,11 +139,10 @@ class UConfigController extends Controller
             DB::transaction(function () use ($config, $data, $oldValue, $user) {
                 tap($config, function ($config) use ($data, $oldValue, $user) {
                     $config->update($data);
-
-                    $latestVersion = UConfigVersion::where('uconfig_id', $config->id)->max('version');
+                   
                     UConfigVersion::create([
                         'uconfig_id' => $config->id,
-                        'version' => $latestVersion + 1,
+                        'version' => $this->versionManager->getNextVersion($config->id), // Incrementa di uno
                         'key' => $config->key,
                         'category' => $config->category,
                         'note' => $config->note,
