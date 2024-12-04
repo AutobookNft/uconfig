@@ -102,7 +102,16 @@ class UConfig
      */
     private function loadFromDatabase(): array
     {
+
         $configArray = [];
+        
+        // Controlla se la tabella esiste
+        if (!Schema::hasTable('uconfig')) {
+            // Restituisce il valore predefinito se la tabella non esiste
+            Log::warning("The 'uconfig' table does not exist. Returning default value for key: {$key}");
+            return $configArray;
+        }
+        
         $configs = UConfigModel::all();
 
         foreach ($configs as $config) {
@@ -149,7 +158,7 @@ class UConfig
     public function get(string $key, mixed $default = null): mixed
     {
 
-         // Controlla se la tabella esiste
+        // Controlla se la tabella esiste
         if (!Schema::hasTable('uconfig')) {
             // Restituisce il valore predefinito se la tabella non esiste
             Log::warning("The 'uconfig' table does not exist. Returning default value for key: {$key}");
