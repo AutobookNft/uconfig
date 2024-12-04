@@ -45,7 +45,8 @@ class UConfigController extends Controller
         if (!Schema::hasTable('uconfig')) {
             // Restituisce il valore predefinito se la tabella non esiste
             Log::warning("The 'uconfig' table does not exist. ");
-            return 'The "uconfig" table does not exist.';
+            $message = 'The "uconfig" table does not exist.';
+            return view('vendor.uconfig.error', compact('message'));
         } else{
             Log::info("The 'uconfig' table exists.");
         }
