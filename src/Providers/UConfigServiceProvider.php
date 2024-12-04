@@ -57,8 +57,7 @@ class UConfigServiceProvider extends ServiceProvider
         // Esegue le seguenti azioni solo se l'applicazione è in esecuzione da riga di comando
         if (app()->runningInConsole()) {
 
-            // $this->handleInitialPublicationMessage();
-
+            $this->handleInitialPublicationMessage();
             $this->publishTheFilea();
         }
 
@@ -99,7 +98,9 @@ class UConfigServiceProvider extends ServiceProvider
                     // Verifica se 'uconfig-resources' è tra i tag specificati
                     if (in_array('uconfig-resources', $tagsArray)) {
                         // Recupera il valore corrente della configurazione 'initial_publication_message'
+                        Log::info('handleInitialPublicationMessage showMessage prima: ');
                         $showMessage =  FacadesUConfig::get('initial_publication_message', null);
+                        Log::info('handleInitialPublicationMessage showMessage dopo: ' );
 
                         // Se il messaggio non è stato ancora mostrato (0 o null)
                         if ($showMessage == 0 || $showMessage === null) {
