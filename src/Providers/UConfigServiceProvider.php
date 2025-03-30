@@ -1,13 +1,13 @@
 <?php
 
-namespace UltraProject\UConfig\Providers;
+namespace Ultra\UltraConfigManager\Providers;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
-use UltraProject\UConfig\UConfig;
-use UltraProject\UConfig\EnvLoader;
-use UltraProject\UConfig\Facades\UConfig as FacadesUConfig;
-use UltraProject\UConfig\Middleware\CheckConfigManagerRole;
+use Ultra\UltraConfigManager\UConfig;
+use Ultra\UltraConfigManager\EnvLoader;
+use Ultra\UltraConfigManager\Facades\UConfig as FacadesUConfig;
+use Ultra\UltraConfigManager\Middleware\CheckConfigManagerRole;
 
 
 class UConfigServiceProvider extends ServiceProvider

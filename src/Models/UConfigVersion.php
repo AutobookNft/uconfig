@@ -1,8 +1,8 @@
 <?php
 
-namespace UltraProject\UConfig\Models;
+namespace Ultra\UltraConfigManager\Models;
 
-use UltraProject\UConfig\Casts\EncryptedCast;
+use Ultra\UltraConfigManager\Casts\EncryptedCast;
 use Illuminate\Database\Eloquent\Model;
 
 class UConfigVersion extends Model

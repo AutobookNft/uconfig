@@ -1,6 +1,6 @@
 <?php
 
-namespace UltraProject\UConfig\Casts;
+namespace Ultra\UltraConfigManager\Casts;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Support\Facades\Crypt;

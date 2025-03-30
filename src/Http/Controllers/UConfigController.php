@@ -1,15 +1,15 @@
 <?php
 
-namespace UltraProject\UConfig\Http\Controllers;
+namespace Ultra\UltraConfigManager\Http\Controllers;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use UltraProject\UConfig\Models\UConfig;
-use UltraProject\UConfig\Models\UConfigVersion;
-use UltraProject\UConfig\Models\UConfigAudit;
-use UltraProject\UConfig\UConfig as UConfigService;
+use Ultra\UltraConfigManager\Models\UConfig;
+use Ultra\UltraConfigManager\Models\UConfigVersion;
+use Ultra\UltraConfigManager\Models\UConfigAudit;
+use Ultra\UltraConfigManager\UConfig as UConfigService;
 
 class UConfigController extends Controller
 {

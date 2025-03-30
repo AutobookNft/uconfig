@@ -1,9 +1,9 @@
 <?php
 
-namespace UltraProject\UConfig;
+namespace Ultra\UltraConfigManager;
 
 use PDO;
-use UltraProject\UConfig\EnvLoader;
+use Ultra\UltraConfigManager\EnvLoader;
 
 class DatabaseConnection
 {

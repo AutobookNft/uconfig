@@ -1,6 +1,6 @@
 <?php
 
-namespace UltraProject\UConfig\Facades;
+namespace Ultra\UltraConfigManager\Facades;
 
 use Illuminate\Support\Facades\Facade;
 

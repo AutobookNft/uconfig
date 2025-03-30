@@ -1,5 +1,5 @@
 <?php 
 
 return [
-    'UConfig' => UltraProject\UConfig\Facades\UConfig::class,
+    'UConfig' => Ultra\UltraConfigManager\Facades\UConfig::class,
 ]; 

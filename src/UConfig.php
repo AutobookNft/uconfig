@@ -1,13 +1,13 @@
 <?php
 
-namespace UltraProject\UConfig;
+namespace Ultra\UltraConfigManager;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use UltraProject\UConfig\Models\UConfig as UConfigModel;
-use UltraProject\UConfig\Models\UConfigVersion;
-use UltraProject\UConfig\Models\UConfigAudit;
+use Ultra\UltraConfigManager\Models\UConfig as UConfigModel;
+use Ultra\UltraConfigManager\Models\UConfigVersion;
+use Ultra\UltraConfigManager\Models\UConfigAudit;
 
 /**
  * UConfig - Centralized configuration management class.

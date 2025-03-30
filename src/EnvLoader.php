@@ -1,6 +1,6 @@
 <?php
 
-namespace UltraProject\UConfig;
+namespace Ultra\UltraConfigManager;
 
 class EnvLoader
 {
